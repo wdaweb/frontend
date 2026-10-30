@@ -70,40 +70,16 @@
 						</div>
 						<!-- 5 步心智流程清單 (去除右側冗餘標籤，大字清晰通透) -->
 						<div class="pt-2 border-t border-slate-800/80 space-y-2">
-							<div class="p-2.5 rounded-xl bg-slate-900/80 border border-slate-800/80 flex items-center justify-between text-base shadow-sm">
+							<div
+								v-for="step in mindsetSteps"
+								:key="`m-step-${step.num}`"
+								class="p-2.5 rounded-xl bg-slate-900/80 border border-slate-800/80 flex items-center justify-between text-base shadow-sm"
+							>
 								<div class="inline-flex items-center space-x-2 shrink-0">
-									<span class="text-xl font-black text-cyan-400 leading-none font-sans">①</span>
-									<span class="text-base font-bold text-cyan-300">理解</span>
+									<span class="text-xl font-black text-cyan-400 leading-none font-sans">{{ step.num }}</span>
+									<span class="text-base font-bold text-cyan-300">{{ step.title }}</span>
 								</div>
-								<span class="text-white font-bold text-base text-right">需求到底是什麼？</span>
-							</div>
-							<div class="p-2.5 rounded-xl bg-slate-900/80 border border-slate-800/80 flex items-center justify-between text-base shadow-sm">
-								<div class="inline-flex items-center space-x-2 shrink-0">
-									<span class="text-xl font-black text-cyan-400 leading-none font-sans">②</span>
-									<span class="text-base font-bold text-cyan-300">拆解</span>
-								</div>
-								<span class="text-white font-bold text-base text-right">這個問題怎麼拆？</span>
-							</div>
-							<div class="p-2.5 rounded-xl bg-slate-900/80 border border-slate-800/80 flex items-center justify-between text-base shadow-sm">
-								<div class="inline-flex items-center space-x-2 shrink-0">
-									<span class="text-xl font-black text-cyan-400 leading-none font-sans">③</span>
-									<span class="text-base font-bold text-cyan-300">協作</span>
-								</div>
-								<span class="text-white font-bold text-base text-right">如何讓 AI 幫我加速？</span>
-							</div>
-							<div class="p-2.5 rounded-xl bg-slate-900/80 border border-slate-800/80 flex items-center justify-between text-base shadow-sm">
-								<div class="inline-flex items-center space-x-2 shrink-0">
-									<span class="text-xl font-black text-cyan-400 leading-none font-sans">④</span>
-									<span class="text-base font-bold text-cyan-300">驗證</span>
-								</div>
-								<span class="text-white font-bold text-base text-right">AI 做的是對的嗎？</span>
-							</div>
-							<div class="p-2.5 rounded-xl bg-slate-900/80 border border-slate-800/80 flex items-center justify-between text-base shadow-sm">
-								<div class="inline-flex items-center space-x-2 shrink-0">
-									<span class="text-xl font-black text-cyan-400 leading-none font-sans">⑤</span>
-									<span class="text-base font-bold text-cyan-300">整合</span>
-								</div>
-								<span class="text-white font-bold text-base text-right">如何把功能真正串起來？</span>
+								<span class="text-white font-bold text-base text-right">{{ step.mobileQuestion || step.question }}</span>
 							</div>
 						</div>
 					</div>
@@ -123,17 +99,9 @@
 										AI 時代，<br /><span class="text-cyan-300">更重要的是工程能力</span>
 									</h4>
 									<ul class="space-y-2.5 text-sm sm:text-base text-slate-200">
-										<li class="flex items-start space-x-2">
+										<li v-for="(cap, cIdx) in coreCapabilities" :key="`tab-cap-${cIdx}`" class="flex items-start space-x-2">
 											<span class="text-cyan-400 font-bold">✓</span>
-											<span>看懂 AI 給的程式，掌握背後邏輯</span>
-										</li>
-										<li class="flex items-start space-x-2">
-											<span class="text-cyan-400 font-bold">✓</span>
-											<span>能自主分析問題，完成除錯與驗證</span>
-										</li>
-										<li class="flex items-start space-x-2">
-											<span class="text-cyan-400 font-bold">✓</span>
-											<span>能整合前後端，完成可交付的產品</span>
+											<span>{{ cap }}</span>
 										</li>
 									</ul>
 								</div>
@@ -150,54 +118,16 @@
 									<h4 class="text-base sm:text-lg font-extrabold text-cyan-300">我們培養：能完成產品的人</h4>
 									<div class="space-y-2.5 mt-3">
 										<div
+											v-for="step in mindsetSteps"
+											:key="`tab-step-${step.num}`"
 											class="p-3 rounded-xl bg-slate-900/90 border border-slate-800/80 flex items-center justify-between shadow-sm"
 										>
 											<div class="inline-flex items-center space-x-2">
-												<span class="text-xl sm:text-2xl font-black text-cyan-400 leading-none">①</span>
-												<span class="text-base sm:text-lg font-bold text-cyan-300">理解</span>
+												<span class="text-xl sm:text-2xl font-black text-cyan-400 leading-none">{{ step.num }}</span>
+												<span class="text-base sm:text-lg font-bold text-cyan-300">{{ step.title }}</span>
 											</div>
-											<span class="text-white font-bold text-base sm:text-lg">需求到底是什麼？</span>
-											<span class="text-xs sm:text-sm text-slate-300 font-medium">需求定義</span>
-										</div>
-										<div
-											class="p-3 rounded-xl bg-slate-900/90 border border-slate-800/80 flex items-center justify-between shadow-sm"
-										>
-											<div class="inline-flex items-center space-x-2">
-												<span class="text-xl sm:text-2xl font-black text-cyan-400 leading-none">②</span>
-												<span class="text-base sm:text-lg font-bold text-cyan-300">拆解</span>
-											</div>
-											<span class="text-white font-bold text-base sm:text-lg">這個問題怎麼拆？</span>
-											<span class="text-xs sm:text-sm text-slate-300 font-medium">架構拆解</span>
-										</div>
-										<div
-											class="p-3 rounded-xl bg-slate-900/90 border border-slate-800/80 flex items-center justify-between shadow-sm"
-										>
-											<div class="inline-flex items-center space-x-2">
-												<span class="text-xl sm:text-2xl font-black text-cyan-400 leading-none">③</span>
-												<span class="text-base sm:text-lg font-bold text-cyan-300">協作</span>
-											</div>
-											<span class="text-white font-bold text-base sm:text-lg">如何讓 AI 幫我加速？</span>
-											<span class="text-xs sm:text-sm text-slate-300 font-medium">精準協同</span>
-										</div>
-										<div
-											class="p-3 rounded-xl bg-slate-900/90 border border-slate-800/80 flex items-center justify-between shadow-sm"
-										>
-											<div class="inline-flex items-center space-x-2">
-												<span class="text-xl sm:text-2xl font-black text-cyan-400 leading-none">④</span>
-												<span class="text-base sm:text-lg font-bold text-cyan-300">驗證</span>
-											</div>
-											<span class="text-white font-bold text-base sm:text-lg">AI 做的是對的嗎？</span>
-											<span class="text-xs sm:text-sm text-slate-300 font-medium">修改與 Debug</span>
-										</div>
-										<div
-											class="p-3 rounded-xl bg-slate-900/90 border border-slate-800/80 flex items-center justify-between shadow-sm"
-										>
-											<div class="inline-flex items-center space-x-2">
-												<span class="text-xl sm:text-2xl font-black text-cyan-400 leading-none">⑤</span>
-												<span class="text-base sm:text-lg font-bold text-cyan-300">整合</span>
-											</div>
-											<span class="text-white font-bold text-base sm:text-lg">如何真正運作？</span>
-											<span class="text-xs sm:text-sm text-slate-300 font-medium">完成產品的人</span>
+											<span class="text-white font-bold text-base sm:text-lg">{{ step.question }}</span>
+											<span class="text-xs sm:text-sm text-slate-300 font-medium">{{ step.tag }}</span>
 										</div>
 									</div>
 								</div>
@@ -227,45 +157,17 @@
 							</div>
 						</div>
 						<div class="grid grid-cols-5 gap-2.5 items-stretch text-center">
-							<div class="p-3.5 rounded-2xl bg-slate-900/90 border border-slate-800 flex flex-col justify-between shadow-md">
+							<div
+								v-for="step in mindsetSteps"
+								:key="`lap-step-${step.num}`"
+								class="p-3.5 rounded-2xl bg-slate-900/90 border border-slate-800 flex flex-col justify-between shadow-md"
+							>
 								<div class="inline-flex items-center justify-center space-x-1">
-									<span class="text-xl sm:text-2xl font-black text-cyan-400 leading-none font-sans">①</span>
-									<span class="text-base font-bold text-cyan-300 tracking-wider">理解</span>
+									<span class="text-xl sm:text-2xl font-black text-cyan-400 leading-none font-sans">{{ step.num }}</span>
+									<span class="text-base font-bold text-cyan-300 tracking-wider">{{ step.title }}</span>
 								</div>
-								<div class="text-base sm:text-lg font-extrabold text-white my-1.5 leading-snug">需求到底是什麼？</div>
-								<span class="text-xs sm:text-sm text-slate-300 font-bold">需求定義</span>
-							</div>
-							<div class="p-3.5 rounded-2xl bg-slate-900/90 border border-slate-800 flex flex-col justify-between shadow-md">
-								<div class="inline-flex items-center justify-center space-x-1">
-									<span class="text-xl sm:text-2xl font-black text-cyan-400 leading-none font-sans">②</span>
-									<span class="text-base font-bold text-cyan-300 tracking-wider">拆解</span>
-								</div>
-								<div class="text-base sm:text-lg font-extrabold text-white my-1.5 leading-snug">這個問題怎麼拆？</div>
-								<span class="text-xs sm:text-sm text-slate-300 font-bold">架構拆解</span>
-							</div>
-							<div class="p-3.5 rounded-2xl bg-slate-900/90 border border-slate-800 flex flex-col justify-between shadow-md">
-								<div class="inline-flex items-center justify-center space-x-1">
-									<span class="text-xl sm:text-2xl font-black text-cyan-400 leading-none font-sans">③</span>
-									<span class="text-base font-bold text-cyan-300 tracking-wider">協作</span>
-								</div>
-								<div class="text-base sm:text-lg font-extrabold text-white my-1.5 leading-snug">如何讓 AI 幫我加速？</div>
-								<span class="text-xs sm:text-sm text-slate-300 font-bold">精準協同</span>
-							</div>
-							<div class="p-3.5 rounded-2xl bg-slate-900/90 border border-slate-800 flex flex-col justify-between shadow-md">
-								<div class="inline-flex items-center justify-center space-x-1">
-									<span class="text-xl sm:text-2xl font-black text-cyan-400 leading-none font-sans">④</span>
-									<span class="text-base font-bold text-cyan-300 tracking-wider">驗證</span>
-								</div>
-								<div class="text-base sm:text-lg font-extrabold text-white my-1.5 leading-snug">AI 做的是對的嗎？</div>
-								<span class="text-xs sm:text-sm text-slate-300 font-bold">修改與 Debug</span>
-							</div>
-							<div class="p-3.5 rounded-2xl bg-slate-900/90 border border-slate-800 flex flex-col justify-between shadow-md">
-								<div class="inline-flex items-center justify-center space-x-1">
-									<span class="text-xl sm:text-2xl font-black text-cyan-400 leading-none font-sans">⑤</span>
-									<span class="text-base font-bold text-cyan-300 tracking-wider">整合</span>
-								</div>
-								<div class="text-base sm:text-lg font-extrabold text-white my-1.5 leading-snug">如何真正運作？</div>
-								<span class="text-xs sm:text-sm text-slate-300 font-bold">完成產品的人</span>
+								<div class="text-base sm:text-lg font-extrabold text-white my-1.5 leading-snug">{{ step.question }}</div>
+								<span class="text-xs sm:text-sm text-slate-300 font-bold">{{ step.tag }}</span>
 							</div>
 						</div>
 					</div>
@@ -291,17 +193,9 @@
 										>
 									</h4>
 									<ul class="space-y-2.5 text-base text-slate-200">
-										<li class="flex items-start space-x-2">
+										<li v-for="(cap, cIdx) in coreCapabilities" :key="`dt-cap-${cIdx}`" class="flex items-start space-x-2">
 											<span class="text-cyan-400 mt-0.5 font-bold">✓</span>
-											<span class="leading-relaxed">看懂 AI 給的程式，掌握背後邏輯</span>
-										</li>
-										<li class="flex items-start space-x-2">
-											<span class="text-cyan-400 mt-0.5 font-bold">✓</span>
-											<span class="leading-relaxed">能自主分析問題，完成除錯與驗證</span>
-										</li>
-										<li class="flex items-start space-x-2">
-											<span class="text-cyan-400 mt-0.5 font-bold">✓</span>
-											<span class="leading-relaxed">能整合前後端，完成可交付的產品</span>
+											<span class="leading-relaxed">{{ cap }}</span>
 										</li>
 									</ul>
 								</div>
@@ -322,64 +216,17 @@
 								</div>
 
 								<div class="grid grid-cols-5 gap-2 2xl:gap-3 items-stretch text-center">
-									<!-- ① 理解 -->
 									<div
+										v-for="step in mindsetSteps"
+										:key="`dt-step-${step.num}`"
 										class="py-4 px-1.5 2xl:px-3 rounded-2xl bg-slate-900/90 border border-slate-800/90 flex flex-col justify-between hover:border-cyan-500/40 transition-colors shadow-lg"
 									>
 										<div class="inline-flex items-center justify-center space-x-1.5">
-											<span class="text-2xl 2xl:text-3xl text-cyan-400 font-black leading-none font-sans">①</span>
-											<span class="text-base 2xl:text-lg text-cyan-300 font-bold tracking-wider">理解</span>
+											<span class="text-2xl 2xl:text-3xl text-cyan-400 font-black leading-none font-sans">{{ step.num }}</span>
+											<span class="text-base 2xl:text-lg text-cyan-300 font-bold tracking-wider">{{ step.title }}</span>
 										</div>
-										<div class="text-base 2xl:text-lg font-black text-white my-2.5 leading-snug whitespace-nowrap">需求到底是什麼？</div>
-										<span class="text-sm 2xl:text-base font-bold text-slate-300 whitespace-nowrap">需求定義</span>
-									</div>
-
-									<!-- ② 拆解 -->
-									<div
-										class="py-4 px-1.5 2xl:px-3 rounded-2xl bg-slate-900/90 border border-slate-800/90 flex flex-col justify-between hover:border-cyan-500/40 transition-colors shadow-lg"
-									>
-										<div class="inline-flex items-center justify-center space-x-1.5">
-											<span class="text-2xl 2xl:text-3xl text-cyan-400 font-black leading-none font-sans">②</span>
-											<span class="text-base 2xl:text-lg text-cyan-300 font-bold tracking-wider">拆解</span>
-										</div>
-										<div class="text-base 2xl:text-lg font-black text-white my-2.5 leading-snug whitespace-nowrap">這個問題怎麼拆？</div>
-										<span class="text-sm 2xl:text-base font-bold text-slate-300 whitespace-nowrap">架構拆解</span>
-									</div>
-
-									<!-- ③ 協作 -->
-									<div
-										class="py-4 px-1.5 2xl:px-3 rounded-2xl bg-slate-900/90 border border-slate-800/90 flex flex-col justify-between hover:border-cyan-500/40 transition-colors shadow-lg"
-									>
-										<div class="inline-flex items-center justify-center space-x-1.5">
-											<span class="text-2xl 2xl:text-3xl text-cyan-400 font-black leading-none font-sans">③</span>
-											<span class="text-base 2xl:text-lg text-cyan-300 font-bold tracking-wider">協作</span>
-										</div>
-										<div class="text-base 2xl:text-lg font-black text-white my-2.5 leading-snug whitespace-nowrap">如何讓 AI 幫我加速？</div>
-										<span class="text-sm 2xl:text-base font-bold text-slate-300 whitespace-nowrap">精準協同</span>
-									</div>
-
-									<!-- ④ 驗證 -->
-									<div
-										class="py-4 px-1.5 2xl:px-3 rounded-2xl bg-slate-900/90 border border-slate-800/90 flex flex-col justify-between hover:border-cyan-500/40 transition-colors shadow-lg"
-									>
-										<div class="inline-flex items-center justify-center space-x-1.5">
-											<span class="text-2xl 2xl:text-3xl text-cyan-400 font-black leading-none font-sans">④</span>
-											<span class="text-base 2xl:text-lg text-cyan-300 font-bold tracking-wider">驗證</span>
-										</div>
-										<div class="text-base 2xl:text-lg font-black text-white my-2.5 leading-snug whitespace-nowrap">AI 做的是對的嗎？</div>
-										<span class="text-sm 2xl:text-base font-bold text-slate-300 whitespace-nowrap">修改與 Debug</span>
-									</div>
-
-									<!-- ⑤ 整合 -->
-									<div
-										class="py-4 px-1.5 2xl:px-3 rounded-2xl bg-slate-900/90 border border-slate-800/90 flex flex-col justify-between hover:border-cyan-500/40 transition-colors shadow-lg"
-									>
-										<div class="inline-flex items-center justify-center space-x-1.5">
-											<span class="text-2xl 2xl:text-3xl text-cyan-400 font-black leading-none font-sans">⑤</span>
-											<span class="text-base 2xl:text-lg text-cyan-300 font-bold tracking-wider">整合</span>
-										</div>
-										<div class="text-base 2xl:text-lg font-black text-white my-2.5 leading-snug whitespace-nowrap">如何真正運作？</div>
-										<span class="text-sm 2xl:text-base font-bold text-slate-300 whitespace-nowrap">完成產品的人</span>
+										<div class="text-base 2xl:text-lg font-black text-white my-2.5 leading-snug whitespace-nowrap">{{ step.question }}</div>
+										<span class="text-sm 2xl:text-base font-bold text-slate-300 whitespace-nowrap">{{ step.tag }}</span>
 									</div>
 								</div>
 							</div>
@@ -400,5 +247,25 @@
 </template>
 
 <script setup lang="ts">
-// 純展示型工程心智核心大區塊，已內建四裝置精緻自適應
+interface MindsetStep {
+	num: string
+	title: string
+	question: string
+	mobileQuestion?: string
+	tag: string
+}
+
+const coreCapabilities = [
+	'看懂 AI 給的程式，掌握背後邏輯',
+	'能自主分析問題，完成除錯與驗證',
+	'能整合前後端，完成可交付的產品',
+]
+
+const mindsetSteps: MindsetStep[] = [
+	{ num: '①', title: '理解', question: '需求到底是什麼？', tag: '需求定義' },
+	{ num: '②', title: '拆解', question: '這個問題怎麼拆？', tag: '架構拆解' },
+	{ num: '③', title: '協作', question: '如何讓 AI 幫我加速？', tag: '精準協同' },
+	{ num: '④', title: '驗證', question: 'AI 做的是對的嗎？', tag: '修改與 Debug' },
+	{ num: '⑤', title: '整合', question: '如何真正運作？', mobileQuestion: '如何把功能真正串起來？', tag: '完成產品的人' },
+]
 </script>
