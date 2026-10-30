@@ -53,7 +53,7 @@
         <!-- 訊息串列 -->
         <TransitionGroup name="chat-msg" tag="div" class="space-y-3 sm:space-y-4">
           <div
-            v-for="(msg, idx) in chatHistory"
+            v-for="msg in chatHistory"
             :key="msg.id"
             class="flex items-start gap-2.5 sm:gap-3"
             :class="msg.role === 'user' ? 'flex-row-reverse' : 'flex-row'"
@@ -114,9 +114,6 @@
             </div>
           </div>
         </div>
-
-        <!-- 滾動定錨底部哨兵元素 -->
-        <div ref="bottomAnchorRef" class="h-1"></div>
       </div>
     </div>
 
@@ -148,7 +145,6 @@ import { ref } from 'vue'
 import { useAiChatPlayer } from '@/composables/useAiChatPlayer'
 
 const scrollContainerRef = ref<HTMLElement | null>(null)
-const bottomAnchorRef = ref<HTMLElement | null>(null)
 
 const {
   conversations,

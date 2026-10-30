@@ -34,7 +34,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { computed } from 'vue'
 
 const props = withDefaults(
   defineProps<{
@@ -48,7 +48,7 @@ const props = withDefaults(
   }
 )
 
-const titleRef = ref<HTMLElement | null>(null)
+
 
 const glowColorClass = computed(() => {
   switch (props.theme) {

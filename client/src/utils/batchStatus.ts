@@ -134,7 +134,7 @@ export function isBatchClosed(batch: AdmissionBatch): boolean {
 /**
  * 格式化報名倒數文字
  */
-export function getCountdownText(endDateStr?: string): string {
+function getCountdownText(endDateStr?: string): string {
   if (!endDateStr) return '熱烈招生中'
   try {
     const end = new Date(endDateStr.replace(/-/g, '/')).getTime() + 24 * 60 * 60 * 1000 - 1000
@@ -154,7 +154,7 @@ export function getCountdownText(endDateStr?: string): string {
 /**
  * 從完整班名提取精簡期別字樣（例如 "第 1 期"、"第 2 期"）
  */
-export function getShortBatchName(name: string): string {
+function getShortBatchName(name: string): string {
   const match = name.match(/第\s*\d+\s*期/)
   return match ? match[0] : name
 }

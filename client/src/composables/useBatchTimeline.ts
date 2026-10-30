@@ -7,7 +7,6 @@ import {
   isBatchTraining,
   isBatchEnded as rawIsBatchEnded,
   isBatchScreeningOrPreparing,
-  getCountdownText,
   getTrainingEndTime,
 } from '@/utils/batchStatus'
 
@@ -17,10 +16,6 @@ export const isCelebrationSimulated = ref(
   (new URLSearchParams(window.location.search).get('preview') === 'celebration' ||
    window.location.hash.includes('preview=celebration'))
 )
-
-export function toggleCelebrationSimulation() {
-  isCelebrationSimulated.value = !isCelebrationSimulated.value
-}
 
 export interface LifecycleStep {
   key: string
@@ -32,22 +27,6 @@ export interface TrainingProgress {
   totalDays: number
   percent: number
   remainingDays: number
-}
-
-export interface StatusPill {
-  label: string
-  class: string
-}
-
-export interface StatusHeroBanner {
-  icon: string
-  title: string
-  subtitle: string
-  badgeText: string
-  containerClass: string
-  titleClass: string
-  subtitleClass: string
-  badgeClass: string
 }
 
 export interface ApplicantsSummary {
@@ -63,21 +42,7 @@ export interface DetailNotice {
   text: string
 }
 
-/**
- * 判斷指定日期字串是否為「今天」的日曆天
- */
-function isTodayGraduationDay(dateStr?: string | null): boolean {
-  if (!dateStr) return false
-  try {
-    const end = new Date(dateStr.replace(/-/g, '/'))
-    const now = new Date()
-    return end.getFullYear() === now.getFullYear() &&
-           end.getMonth() === now.getMonth() &&
-           end.getDate() === now.getDate()
-  } catch {
-    return false
-  }
-}
+
 
 /**
  * 招生期別時序與生命週期演算 Composable
@@ -231,111 +196,7 @@ export function useBatchTimeline(batchesInput: MaybeRefOrGetter<AdmissionBatch[]
     return latestEnded.id === batch.id
   }
 
-  function isBatchUrgentClosing(batch: AdmissionBatch): boolean {
-    if (!isBatchEnrolling(batch)) return false
-    if (batch.status_override === 'closing_soon' || batch.dynamic_status === 'closing_soon') return true
-    if (!batch.enroll_end_date) return false
-    try {
-      const end = new Date(batch.enroll_end_date.replace(/-/g, '/')).getTime() + 24 * 60 * 60 * 1000 - 1000
-      const now = Date.now()
-      const diffHours = (end - now) / (1000 * 60 * 60)
-      return diffHours > 0 && diffHours <= 72
-    } catch {
-      return false
-    }
-  }
 
-  function getStatusHeroBanner(batch: AdmissionBatch): StatusHeroBanner {
-    if (isBatchEnded(batch)) {
-      const endDate = batch.training_end_date ? batch.training_end_date.replace(/-/g, '/') : ''
-      return {
-        icon: '🎓',
-        title: '920 小時全課程培育達成',
-        subtitle: `已於 ${endDate} 全員完訓 · 邁向專業職場`,
-        badgeText: '邁向職場',
-        containerClass: 'bg-slate-900/90 border-slate-750/90 shadow-md shadow-slate-950/40',
-        titleClass: 'text-slate-200',
-        subtitleClass: 'text-slate-400',
-        badgeClass: 'bg-slate-800 text-slate-300 border-slate-700/80 shadow-sm'
-      }
-    }
-
-    if (isBatchTraining(batch)) {
-      const prog = getTrainingProgress(batch)
-      const days = prog.remainingDays
-      const isTodayGrad = isTodayGraduationDay(batch.training_end_date)
-      return {
-        icon: '🟢',
-        title: isTodayGrad ? '今日結訓日 · 920h 最後衝刺' : '920h 實體培訓全力衝刺中',
-        subtitle: isTodayGrad
-          ? '全體學員結訓專題發表 · 邁向前端與 AI 職場！'
-          : `紮實程式演練 · 已受訓 ${prog.elapsedDays}/${prog.totalDays} 天 · 距結訓僅剩 ${days} 天`,
-        badgeText: '培訓衝刺中',
-        containerClass: 'bg-emerald-950/40 border-emerald-500/40 shadow-lg shadow-emerald-950/30',
-        titleClass: 'text-emerald-200',
-        subtitleClass: 'text-emerald-300/85',
-        badgeClass: 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40'
-      }
-    }
-
-    if (isBatchScreeningOrPreparing(batch)) {
-      const startDate = batch.training_start_date ? batch.training_start_date.replace(/-/g, '/') : ''
-      return {
-        icon: '✨',
-        title: '甄試已圓滿結束 · 待開訓報到',
-        subtitle: `正取 24 名造冊中 · 預計 ${startDate} 正式開課`,
-        badgeText: '即將開課',
-        containerClass: 'bg-cyan-950/40 border-cyan-500/40 shadow-lg shadow-cyan-950/30',
-        titleClass: 'text-cyan-200',
-        subtitleClass: 'text-cyan-300/85',
-        badgeClass: 'bg-cyan-500/20 text-cyan-300 border-cyan-500/40'
-      }
-    }
-
-    if (isBatchEnrolling(batch)) {
-      const urgent = isBatchUrgentClosing(batch)
-      const endDate = batch.enroll_end_date ? batch.enroll_end_date.replace(/-/g, '/') : ''
-      return {
-        icon: urgent ? '⚠️' : '🔥',
-        title: urgent ? '席次倒數計時 · 報名即將截止' : '官方火熱招生中 · 政府全額補助',
-        subtitle: `截止至 ${endDate}（${getCountdownText(batch.enroll_end_date)}）`,
-        badgeText: urgent ? '最後倒數' : '開放報名',
-        containerClass: urgent
-          ? 'bg-amber-950/40 border-amber-500/60 shadow-lg shadow-amber-950/40'
-          : 'bg-cyan-950/40 border-cyan-500/40 shadow-lg shadow-cyan-950/30',
-        titleClass: urgent ? 'text-amber-200' : 'text-cyan-200',
-        subtitleClass: urgent ? 'text-amber-300/90' : 'text-cyan-300/85',
-        badgeClass: urgent
-          ? 'bg-amber-500/25 text-amber-300 border-amber-500/50 animate-pulse'
-          : 'bg-cyan-500/20 text-cyan-300 border-cyan-500/40'
-      }
-    }
-
-    if (isBatchUpcoming(batch)) {
-      const startDate = batch.enroll_start_date ? batch.enroll_start_date.replace(/-/g, '/') : '即將公布'
-      return {
-        icon: '⏳',
-        title: '新一期別籌備中 · 敬請期待',
-        subtitle: `簡章時程即將公布 · 預計報名日：${startDate}`,
-        badgeText: '招生籌備',
-        containerClass: 'bg-slate-900/60 border-slate-800 shadow-none',
-        titleClass: 'text-slate-300',
-        subtitleClass: 'text-slate-400',
-        badgeClass: 'bg-slate-800 text-slate-400 border-slate-700/60'
-      }
-    }
-
-    return {
-      icon: '📢',
-      title: '招生時程與資訊',
-      subtitle: `${batch.dynamic_status || '官方招訓公告'}`,
-      badgeText: '官方資訊',
-      containerClass: 'bg-slate-900/60 border-slate-800 shadow-none',
-      titleClass: 'text-slate-300',
-      subtitleClass: 'text-slate-400',
-      badgeClass: 'bg-slate-800 text-slate-400 border-slate-700/60'
-    }
-  }
 
   function getApplicantsSummary(batch: AdmissionBatch): ApplicantsSummary {
     const planned = batch.planned_trainees || 24
@@ -378,65 +239,6 @@ export function useBatchTimeline(batchesInput: MaybeRefOrGetter<AdmissionBatch[]
       detailText: '零基礎雙螢幕教學',
       barClass: 'bg-slate-800',
       percent: 0
-    }
-  }
-
-  function getFastStatusPill(batch: AdmissionBatch): StatusPill {
-    if (isBatchEnded(batch)) {
-      const isTodayGrad = (isCelebrationSimulated.value && batch.id === 1) || isTodayGraduationDay(batch.training_end_date)
-      const isCelebration = isCelebrationBatch(batch)
-
-      if (isTodayGrad) {
-        return {
-          label: '🎓 今日圓滿結訓 · 邁向職場',
-          class: 'bg-slate-800/80 text-slate-400 border border-slate-700/60 shadow-none'
-        }
-      }
-
-      if (isCelebration) {
-        return {
-          label: '🎓 圓滿結訓 · 邁向職場',
-          class: 'bg-slate-800/80 text-slate-400 border border-slate-700/60 shadow-none'
-        }
-      }
-
-      return {
-        label: `🏁 本期已結訓 · 報名截止`,
-        class: 'bg-slate-900/90 text-slate-400 border border-slate-800 shadow-none'
-      }
-    }
-    if (isBatchTraining(batch)) {
-      const prog = getTrainingProgress(batch)
-      const days = prog.remainingDays
-      const isTodayGrad = isTodayGraduationDay(batch.training_end_date)
-      return {
-        label: isTodayGrad
-          ? '🏁 今日結訓日 · 920h 最後衝刺'
-          : (days <= 14 ? `🏁 倒數結訓 · 距結訓僅剩 ${days} 天` : `🟢 920h 實體培訓進行中`),
-        class: 'bg-emerald-500/15 text-emerald-300 border border-emerald-500/40 shadow-sm shadow-emerald-500/10'
-      }
-    }
-    if (isBatchScreeningOrPreparing(batch)) {
-      return {
-        label: `✨ 甄試結束 · 待開訓 (${batch.training_start_date} 開課)`,
-        class: 'bg-cyan-500/15 text-cyan-300 border border-cyan-500/40 shadow-sm shadow-cyan-500/10'
-      }
-    }
-    if (isBatchEnrolling(batch)) {
-      return {
-        label: `🔥 火熱報名中 · ${getCountdownText(batch.enroll_end_date)}`,
-        class: 'bg-amber-500/20 text-amber-300 border border-amber-500/40 shadow-sm shadow-amber-500/10'
-      }
-    }
-    if (isBatchUpcoming(batch)) {
-      return {
-        label: `⏳ 招生籌備中 · 即將開放`,
-        class: 'bg-slate-800/80 text-slate-400 border border-slate-700/60 shadow-none'
-      }
-    }
-    return {
-      label: `📢 ${batch.dynamic_status || '招生資訊'}`,
-      class: 'bg-slate-800/80 text-slate-400 border border-slate-700/60 shadow-none'
     }
   }
 
@@ -574,15 +376,12 @@ export function useBatchTimeline(batchesInput: MaybeRefOrGetter<AdmissionBatch[]
     getStepStatus,
     isScreeningEnded,
     isCelebrationBatch,
-    getFastStatusPill,
-    getStatusHeroBanner,
     getApplicantsSummary,
     getLifecycleLineWidth,
     getStepNodeClass,
     getStepTextClass,
     getTrainingProgress,
     getLifecycleDetailNotice,
-    isCelebrationSimulated,
-    toggleCelebrationSimulation
+    isCelebrationSimulated
   }
 }

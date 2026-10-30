@@ -8,7 +8,7 @@ gsap.registerPlugin(ScrollTrigger, ScrollToPlugin)
  * 全域動效單一標準配置 (Global Unified Motion Standards)
  * 全站所有 Section 與卡片的滾動進場動畫，強制 100% 共用此參數！
  */
-export const GLOBAL_MOTION = {
+const GLOBAL_MOTION = {
   // 核心進場位移 (優雅微升，嚴禁過度位移或 scale 膨脹突變)
   yOffset: 28,
   // 核心動畫時長 (溫潤沉穩，保證極致絲滑)
@@ -77,47 +77,6 @@ export function createScrollStagger(
         clearProps: 'transform,opacity'
       }
     )
-  })
-}
-
-/**
- * 批次滾動交錯進場調度函式 (專門針對多行網格卡片，如 7 大課程模組、8 大技術棧、專題成果牆)
- * 當每一行或每一批卡片滾動進入視窗時，各自以 stagger 依序微升，保證每一行都能親眼看見動畫！
- * @param targets 目標選擇器 (例如: '#curriculum-cards-grid .curriculum-card')
- * @param options 選填參數
- */
-export function createBatchScrollStagger(
-  targets: string,
-  options?: ScrollStaggerOptions
-): gsap.Context {
-  return gsap.context(() => {
-    const prefersReducedMotion = typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches
-    if (prefersReducedMotion) return
-
-    const y = options?.yOffset ?? GLOBAL_MOTION.yOffset
-    const duration = options?.duration ?? GLOBAL_MOTION.duration
-    const stagger = options?.stagger ?? GLOBAL_MOTION.stagger
-    const ease = options?.ease ?? GLOBAL_MOTION.ease
-    const start = options?.start ?? 'top 88%'
-
-    ScrollTrigger.batch(targets, {
-      start,
-      once: true,
-      onEnter: (batch) => {
-        gsap.fromTo(
-          batch,
-          { y, opacity: 0 },
-          {
-            y: 0,
-            opacity: 1,
-            duration,
-            stagger,
-            ease,
-            clearProps: 'transform,opacity'
-          }
-        )
-      }
-    })
   })
 }
 
