@@ -71,9 +71,25 @@ export const useCmsStore = defineStore('cms', () => {
 	const isLoading = ref(false)
 	const error = ref<string | null>(null)
 
-	// 背景靜默非同步喚醒後端 API 並更新最新狀態
-	async function fetchAll() {
-		isLoading.value = true
+	// 智慧靜默重試排程 (克服 Render 免費版 30s 冷啟動延遲，後端甦醒時無縫自動更新)
+	let retryTimer: ReturnType<typeof setTimeout> | null = null
+	let retryCount = 0
+	const MAX_RETRIES = 2
+	const RETRY_DELAYS = [15000, 30000]
+
+	function scheduleSilentRetry() {
+		if (retryCount >= MAX_RETRIES || isLiveConnected.value) return
+		if (retryTimer) clearTimeout(retryTimer)
+		const delay = RETRY_DELAYS[retryCount] || 30000
+		retryCount++
+		retryTimer = setTimeout(() => {
+			fetchAll(true)
+		}, delay)
+	}
+
+	// 背景靜默非同步喚醒後端 API 並更新最新狀態 (支援 isSilent 靜默重試不閃爍 Loading)
+	async function fetchAll(isSilent = false) {
+		if (!isSilent) isLoading.value = true
 		error.value = null
 		try {
 			const [settingsRes, carouselsRes, batchesRes, modulesRes, techCardsRes, facilitiesRes, projectsRes, faqsRes] =
@@ -104,6 +120,16 @@ export const useCmsStore = defineStore('cms', () => {
 
 			const hasValidData = !!(settingsRes || batchesRes || carouselsRes)
 			isLiveConnected.value = hasValidData
+
+			if (hasValidData) {
+				retryCount = 0
+				if (retryTimer) {
+					clearTimeout(retryTimer)
+					retryTimer = null
+				}
+			} else {
+				scheduleSilentRetry()
+			}
 
 			// 儲存最新快照到 localStorage
 			try {

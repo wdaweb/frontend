@@ -68,7 +68,7 @@
           <span class="inline-block">本網站為前端班師資推廣宣傳網頁，非勞動部官方網站；</span>
           <span class="inline-block">招生資訊與各項規範皆以「台灣就業通」公告為準。</span>
         </p>
-        <p class="text-slate-500 font-mono pt-0.5">
+        <p class="text-slate-400 font-mono pt-0.5">
           © {{ currentYear }} 泰山職業訓練場 ｜ 前端網頁技術與AI應用班
         </p>
       </div>

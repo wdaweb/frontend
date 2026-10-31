@@ -48,6 +48,17 @@
 		overflow-x: hidden;
 		max-width: 100vw;
 	}
+	/* WCAG 2.1 AA 無障礙高對比焦點外框：鍵盤 Tab 瀏覽時清楚顯現電光青焦點外框 */
+	:focus-visible {
+		outline: 2px solid var(--color-cyan-400, #22d3ee);
+		outline-offset: 2px;
+	}
+	a:focus-visible,
+	button:focus-visible {
+		outline: 2px solid var(--color-cyan-400, #22d3ee);
+		outline-offset: 2px;
+		border-radius: 4px;
+	}
 	h1 {
 		font-size: var(--font-size-4xl);
 		text-wrap: balance;
