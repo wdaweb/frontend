@@ -39,7 +39,7 @@
       <div
         class="transform rotate-12 border-2 border-slate-700/80 rounded-2xl px-3 py-1.5 sm:px-4 sm:py-2 bg-slate-900/90 backdrop-blur-md flex flex-col items-center justify-center shadow-xl shadow-black/60"
       >
-        <span class="text-[10px] sm:text-xs font-mono font-bold tracking-widest text-slate-400 uppercase">
+        <span class="text-xs font-mono font-bold tracking-widest text-slate-400 uppercase">
           TAISHAN WDA · 920H
         </span>
         <span class="text-xs sm:text-sm font-black tracking-wider text-slate-200 flex items-center space-x-1 mt-0.5">
