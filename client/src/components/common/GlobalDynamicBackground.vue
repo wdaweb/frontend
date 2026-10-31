@@ -11,7 +11,7 @@
 import { ref, watch, onMounted, onUnmounted } from 'vue'
 import { useRoute } from 'vue-router'
 import { useThemeStore } from '@/stores/useThemeStore'
-import { ThreeNebulaEngine } from '@/engines/background/threeNebulaEngine'
+import type { ThreeNebulaEngine } from '@/engines/background/threeNebulaEngine'
 import { MeteorCanvasSystem } from '@/engines/background/meteorCanvasSystem'
 
 const canvasRef = ref<HTMLCanvasElement | null>(null)
@@ -65,16 +65,51 @@ function handleVisibilityChange() {
 }
 
 let lastTimestamp = 0
+let lowFpsFrames = 0
+let isComponentMounted = true
+let threeInitTimer: ReturnType<typeof setTimeout> | null = null
+
+// 非同步動態加載 Three.js 星雲物理引擎 (首屏極速秒開，延遲非阻塞加載 500kB 3D 核心)
+async function initThreeNebulaAsync() {
+  if (!isComponentMounted || !canvasRef.value || threeEngine) return
+  try {
+    const { ThreeNebulaEngine } = await import('@/engines/background/threeNebulaEngine')
+    if (!isComponentMounted || !canvasRef.value) return
+    threeEngine = new ThreeNebulaEngine({
+      canvas: canvasRef.value,
+      store,
+      getIsMobile: () => isMobileDevice,
+      getPrefersReducedMotion: () => prefersReducedMotion
+    })
+    threeEngine.init()
+    const w = window.innerWidth
+    const h = window.innerHeight
+    const dpr = threeEngine.getOptimalDpr()
+    threeEngine.resize(w, h, dpr)
+  } catch (err) {
+    console.warn('Three.js 背景星雲異步載入提示:', err)
+  }
+}
 
 function renderLoop(timestamp: number = performance.now()) {
   if (isPageHidden) return
   animId = requestAnimationFrame(renderLoop)
 
-  const dt = lastTimestamp ? Math.min((timestamp - lastTimestamp) / 1000, 0.1) : 0.016
+  const rawDt = lastTimestamp ? (timestamp - lastTimestamp) / 1000 : 0.016
+  const dt = Math.min(rawDt, 0.1)
   lastTimestamp = timestamp
 
-  // 1. 渲染 3D 宇宙星雲與微星
-  threeEngine?.render()
+  // 動態 FPS 感知調頻：若偵測到連續掉幀 (如手機劇烈滾動或低階省電模式)，隔幀渲染以保護主執行緒
+  if (rawDt > 0.033) {
+    lowFpsFrames = Math.min(lowFpsFrames + 1, 10)
+  } else if (lowFpsFrames > 0) {
+    lowFpsFrames--
+  }
+
+  // 1. 渲染 3D 宇宙星雲 (平滑保護機制)
+  if (lowFpsFrames < 4 || (Math.floor(timestamp / 16) % 2 === 0)) {
+    threeEngine?.render()
+  }
 
   // 2. 尊重無障礙「減少動態效果」偏好：若開啟則跳過高頻流星與波動物理演算
   if (!prefersReducedMotion) {
@@ -101,16 +136,10 @@ watch(
 onMounted(() => {
   if (!canvasRef.value || !meteorCanvasRef.value) return
 
+  isComponentMounted = true
   updateDeviceCapabilities()
 
-  threeEngine = new ThreeNebulaEngine({
-    canvas: canvasRef.value,
-    store,
-    getIsMobile: () => isMobileDevice,
-    getPrefersReducedMotion: () => prefersReducedMotion
-  })
-  threeEngine.init()
-
+  // 1. 輕量 2D Canvas 流星系統 0ms 瞬間掛載，享受秒開極速
   meteorSystem = new MeteorCanvasSystem({
     canvas: meteorCanvasRef.value,
     store,
@@ -119,7 +148,7 @@ onMounted(() => {
 
   const w = window.innerWidth
   const h = window.innerHeight
-  const dpr = threeEngine.getOptimalDpr()
+  const dpr = Math.min(window.devicePixelRatio || 1, 2)
   meteorSystem.resize(w, h, dpr)
 
   if (typeof document !== 'undefined' && 'fonts' in document) {
@@ -131,9 +160,22 @@ onMounted(() => {
   document.addEventListener('visibilitychange', handleVisibilityChange)
 
   renderLoop()
+
+  // 2. 利用 requestIdleCallback 或微延遲，非阻塞動態載入 Three.js 3D 星雲
+  if (typeof window !== 'undefined' && 'requestIdleCallback' in window) {
+    (window as any).requestIdleCallback(() => initThreeNebulaAsync(), { timeout: 1200 })
+  } else {
+    threeInitTimer = setTimeout(() => initThreeNebulaAsync(), 200)
+  }
 })
 
 onUnmounted(() => {
+  isComponentMounted = false
+  if (threeInitTimer) {
+    clearTimeout(threeInitTimer)
+    threeInitTimer = null
+  }
+
   window.removeEventListener('resize', handleResize)
   window.removeEventListener('mousemove', handleMouseMove)
   document.removeEventListener('visibilitychange', handleVisibilityChange)

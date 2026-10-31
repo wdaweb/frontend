@@ -1,5 +1,13 @@
 <template>
   <div class="min-h-screen bg-slate-950 text-slate-100 flex flex-col selection:bg-cyan-500 selection:text-white relative overflow-x-hidden w-full max-w-[100vw]">
+    <!-- 無障礙跳至主要內容快速錨點 (WCAG 2.1 AA 核心指標) -->
+    <a
+      href="#main-content"
+      class="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-[9999] focus:px-4 focus:py-2.5 focus:bg-cyan-400 focus:text-slate-950 focus:font-bold focus:rounded-xl focus:shadow-2xl focus:ring-2 focus:ring-white focus:outline-none"
+    >
+      跳至主要內容區 (Skip to main content)
+    </a>
+
     <!-- 0. 課程特色頁面（首頁）專屬動態背景 (依 GlowLabView 設定的動畫即時渲染，其他分頁不顯示) -->
     <GlobalDynamicBackground />
 
@@ -29,7 +37,7 @@
     <!-- 頂部導覽列 (測試頁隱藏) -->
     <Navbar />
 
-    <main class="flex-grow relative z-10 bg-transparent">
+    <main id="main-content" class="flex-grow relative z-10 bg-transparent" tabindex="-1">
       <router-view v-slot="{ Component, route }">
         <transition name="page" mode="out-in">
           <component :is="Component" :key="route.path" />
