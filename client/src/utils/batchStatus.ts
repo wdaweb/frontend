@@ -5,7 +5,14 @@ import type { AdmissionBatch } from '@/types'
  */
 export function isBatchEnrolling(batch: AdmissionBatch): boolean {
   if (batch.status_override === 'open' || batch.status_override === 'closing_soon') return true
-  if (batch.status_override === 'ended' || batch.status_override === 'training' || batch.status_override === 'full' || batch.status_override === 'upcoming') return false
+  if (
+    batch.status_override === 'ended' ||
+    batch.status_override === 'training' ||
+    batch.status_override === 'full' ||
+    batch.status_override === 'upcoming' ||
+    batch.status_override === 'screening' ||
+    batch.status_override === 'preparing'
+  ) return false
   if (batch.dynamic_status === 'open' || batch.dynamic_status === 'closing_soon') return true
   if (!batch.enroll_start_date || !batch.enroll_end_date) return false
   try {
