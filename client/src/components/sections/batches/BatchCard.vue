@@ -171,6 +171,7 @@
         :href="batch.apply_url"
         target="_blank"
         rel="noopener noreferrer"
+        :aria-label="`${batch.batch_name} 立即前往台灣就業通官方網站報名（另開新分頁）`"
         @click="$emit('applyClick', batch)"
         class="w-full py-3.5 sm:py-4 px-3 rounded-2xl text-center font-bold text-white shadow-xl hover:-translate-y-0.5 active:scale-95 transition-all duration-200 flex items-center justify-center space-x-2 text-base lg:text-lg cursor-pointer"
         :class="

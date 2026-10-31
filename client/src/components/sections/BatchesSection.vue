@@ -151,7 +151,8 @@
 						:href="store.settings?.discord_invite_url || 'https://discord.gg/TrerFKG'"
 						target="_blank"
 						rel="noopener noreferrer"
-						class="px-4 py-2.5 rounded-xl text-sm font-bold text-indigo-300 bg-indigo-500/15 hover:bg-indigo-500/25 border border-indigo-500/40 hover:border-indigo-300 transition-all flex items-center justify-center space-x-1.5 shadow-sm active:scale-95 cursor-pointer"
+						aria-label="加入官方 Discord 伺服器進行線上即時諮詢（另開新分頁）"
+						class="px-4 py-2.5 rounded-xl text-sm font-bold text-indigo-300 bg-indigo-500/15 hover:bg-indigo-500/25 border border-indigo-500/40 hover:border-indigo-300 transition-all flex items-center justify-center space-x-1.5 shadow-sm active:scale-95 cursor-pointer focus-visible:ring-2 focus-visible:ring-indigo-400 focus:outline-none"
 					>
 						<span>💬 官方 Discord</span>
 					</a>

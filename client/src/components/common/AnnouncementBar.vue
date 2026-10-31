@@ -21,6 +21,7 @@
       </div>
       <span class="hidden sm:inline-flex items-center text-xs font-semibold text-cyan-400 group-hover:translate-x-1 transition-transform">
         查看詳情 →
+        <span class="sr-only">（另開新分頁）</span>
       </span>
     </a>
     <router-link
