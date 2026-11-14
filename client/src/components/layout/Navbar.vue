@@ -64,8 +64,25 @@
 									{{ store.settings?.site_title || '泰山職訓－前端網頁技術與AI應用' }}
 								</span>
 							</div>
-							<span class="hidden sm:block text-xs sm:text-sm text-slate-400 font-medium leading-none mt-1 truncate">
-								泰山職業訓練場 ｜ 師資成果推廣網
+							<span class="flex items-center gap-1 text-xs sm:text-sm text-slate-400 font-medium leading-none mt-1 truncate">
+								<span class="hidden sm:inline">泰山職業訓練場 ｜</span>
+								<svg
+									class="w-3.5 h-3.5 text-amber-400 shrink-0"
+									viewBox="0 0 24 24"
+									fill="none"
+									stroke="currentColor"
+									stroke-width="2.4"
+									stroke-linecap="round"
+									aria-hidden="true"
+								>
+									<line x1="12" y1="2.5" x2="12" y2="21.5" />
+									<line x1="2.5" y1="12" x2="21.5" y2="12" />
+									<line x1="5.3" y1="5.3" x2="18.7" y2="18.7" />
+									<line x1="18.7" y1="5.3" x2="5.3" y2="18.7" />
+									<line x1="8.4" y1="3.2" x2="15.6" y2="20.8" />
+									<line x1="3.2" y1="8.4" x2="20.8" y2="15.6" />
+								</svg>
+								<span class="text-amber-300 font-bold">培訓享每月 Claude AI 資源</span>
 							</span>
 						</div>
 					</router-link>
@@ -193,8 +210,25 @@
 										{{ store.settings?.site_title || '泰山職訓－前端網頁技術與AI應用' }}
 									</span>
 								</div>
-								<span class="hidden sm:block text-xs sm:text-sm text-slate-400 font-medium leading-none mt-1 truncate">
-									泰山職業訓練場 ｜ 師資成果推廣網
+								<span class="flex items-center gap-1 text-xs sm:text-sm text-slate-400 font-medium leading-none mt-1 truncate">
+									<span class="hidden sm:inline">泰山職業訓練場 ｜</span>
+									<svg
+										class="w-3.5 h-3.5 text-amber-400 shrink-0"
+										viewBox="0 0 24 24"
+										fill="none"
+										stroke="currentColor"
+										stroke-width="2.4"
+										stroke-linecap="round"
+										aria-hidden="true"
+									>
+										<line x1="12" y1="2.5" x2="12" y2="21.5" />
+										<line x1="2.5" y1="12" x2="21.5" y2="12" />
+										<line x1="5.3" y1="5.3" x2="18.7" y2="18.7" />
+										<line x1="18.7" y1="5.3" x2="5.3" y2="18.7" />
+										<line x1="8.4" y1="3.2" x2="15.6" y2="20.8" />
+										<line x1="3.2" y1="8.4" x2="20.8" y2="15.6" />
+									</svg>
+									<span class="text-amber-300 font-bold">培訓享每月 Claude AI 資源</span>
 								</span>
 							</div>
 						</router-link>

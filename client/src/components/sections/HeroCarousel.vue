@@ -13,9 +13,29 @@
       <div v-if="currentSlide" class="w-full grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center py-2 sm:py-4">
         <!-- Left Text Content (8pt 垂直律動與格式塔群組精準重構，平板端居中穩健) -->
         <div id="hero-left-content" class="w-full max-w-3xl mx-auto lg:mx-0 lg:max-w-none lg:col-span-6 flex flex-col items-center lg:items-start text-center lg:text-left self-center transform-gpu will-change-transform">
-          <!-- 1. 頂部認證標籤 Badge (權威背書) -->
-          <div class="inline-flex items-center space-x-2 px-3.5 py-1.5 rounded-full bg-slate-900/90 border border-cyan-500/30 text-sm font-bold text-cyan-400 shadow-sm shadow-cyan-950/40 mb-2.5 sm:mb-3.5 lg:mb-4">
-            <span>✨ 勞動部自辦職前訓練 ｜ <span class="inline-block">920 小時實體培訓</span></span>
+          <!-- 1. 頂部認證標籤 Badge (權威背書 + 每月 Claude AI 資源) -->
+          <div class="inline-flex flex-wrap items-center justify-center lg:justify-start gap-x-2 gap-y-1 px-3.5 py-1.5 rounded-2xl sm:rounded-full bg-slate-900/90 border border-cyan-500/30 text-xs sm:text-sm font-bold text-cyan-400 shadow-sm shadow-cyan-950/40 mb-2.5 sm:mb-3.5 lg:mb-4">
+            <span>✨ 勞動部自辦職前訓練 ｜ <span class="inline-block">920h 實體培訓</span></span>
+            <span class="hidden sm:inline text-slate-600" aria-hidden="true">｜</span>
+            <span class="inline-flex items-center gap-1 text-amber-300">
+              <svg
+                class="w-3.5 h-3.5 text-amber-400 shrink-0"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2.4"
+                stroke-linecap="round"
+                aria-hidden="true"
+              >
+                <line x1="12" y1="2.5" x2="12" y2="21.5" />
+                <line x1="2.5" y1="12" x2="21.5" y2="12" />
+                <line x1="5.3" y1="5.3" x2="18.7" y2="18.7" />
+                <line x1="18.7" y1="5.3" x2="5.3" y2="18.7" />
+                <line x1="8.4" y1="3.2" x2="15.6" y2="20.8" />
+                <line x1="3.2" y1="8.4" x2="20.8" y2="15.6" />
+              </svg>
+              <span>每月 Claude AI 資源</span>
+            </span>
           </div>
 
           <!-- 2. 主標題與副標題固定安全高度容器 (頂部定錨 0 抖動，精密貼合文案階梯高度) -->
