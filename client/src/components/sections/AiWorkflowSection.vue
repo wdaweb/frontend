@@ -29,9 +29,44 @@
 				<p
 					class="hidden sm:block text-slate-400 mt-4 text-base sm:text-lg max-w-4xl xl:max-w-5xl mx-auto leading-relaxed text-pretty text-center"
 				>
-					AI 可以加速開發，但無法取代需求分析與架構思考。培訓期間提供學員每月 Claude AI
-					實戰資源，讓頂尖 AI 成為你的副駕駛，由你主導設計、驗證與除錯，最終完成前後端整合與真正可交付的專案。
+					AI 可以加速開發，但無法取代需求分析與架構思考。讓頂尖 AI
+					成為你的副駕駛，由你主導設計、驗證與除錯，最終完成前後端整合與真正可交付的專案。
 				</p>
+
+				<!-- Claude AI 專屬實戰資源徽章 (手機與桌機皆醒目呈現，含星芒 Logo 與品牌字樣) -->
+				<div class="mt-4 sm:mt-6 flex justify-center">
+					<div
+						class="inline-flex flex-wrap items-center justify-center gap-2 sm:gap-3 px-4 sm:px-5 py-2 sm:py-2.5 rounded-2xl bg-slate-900/90 border border-amber-500/40 shadow-lg shadow-amber-950/30 backdrop-blur-md"
+					>
+						<!-- Claude 星芒標誌 SVG + 品牌 LOGO 文字 -->
+						<span
+							class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-xl bg-amber-500/15 border border-amber-500/30 text-amber-300 font-extrabold text-sm sm:text-base tracking-tight shrink-0"
+						>
+							<svg
+								class="w-4 h-4 sm:w-5 sm:h-5 text-amber-400 shrink-0"
+								viewBox="0 0 24 24"
+								fill="none"
+								stroke="currentColor"
+								stroke-width="2.2"
+								stroke-linecap="round"
+								aria-hidden="true"
+							>
+								<line x1="12" y1="2.5" x2="12" y2="21.5" />
+								<line x1="2.5" y1="12" x2="21.5" y2="12" />
+								<line x1="5.3" y1="5.3" x2="18.7" y2="18.7" />
+								<line x1="18.7" y1="5.3" x2="5.3" y2="18.7" />
+								<line x1="8.4" y1="3.2" x2="15.6" y2="20.8" />
+								<line x1="3.2" y1="8.4" x2="20.8" y2="15.6" />
+							</svg>
+							<span>Claude AI</span>
+						</span>
+
+						<!-- 核心優勢說明文字 -->
+						<span class="text-sm sm:text-base font-bold text-slate-100 tracking-wide">
+							培訓期間提供學員<span class="text-cyan-300">每月專屬 Claude AI 實戰資源</span>，課堂與專題直接上手
+						</span>
+					</div>
+				</div>
 			</div>
 
 			<!-- 手機端橫向滑動提示 (桌機隱藏，對稱勻稱的上下間距) -->
