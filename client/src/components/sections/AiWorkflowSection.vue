@@ -29,8 +29,8 @@
 				<p
 					class="hidden sm:block text-slate-400 mt-4 text-base sm:text-lg max-w-4xl xl:max-w-5xl mx-auto leading-relaxed text-pretty text-center"
 				>
-					AI 可以加速開發，但無法取代需求分析與架構思考。讓 AI
-					成為你的副駕駛，由你主導設計、驗證與除錯，最終完成前後端整合與可交付的專案，最終完成前後端整合與真正可交付的專案。
+					AI 可以加速開發，但無法取代需求分析與架構思考。培訓期間提供學員每月 Claude AI
+					實戰資源，讓頂尖 AI 成為你的副駕駛，由你主導設計、驗證與除錯，最終完成前後端整合與真正可交付的專案。
 				</p>
 			</div>
 
