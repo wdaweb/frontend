@@ -17,11 +17,11 @@
 			:class="[isScrolled ? 'px-2.5 sm:px-4 lg:px-6 2xl:px-8 pt-2 sm:pt-3' : 'px-0 pt-0']"
 		>
 			<nav
-				class="relative flex items-center justify-between transition-all duration-500 ease-out overflow-hidden"
+				class="relative flex items-center justify-between gap-2 transition-all duration-500 ease-out overflow-hidden"
 				:class="[
 					isScrolled
-						? 'w-full max-w-[1536px] 2xl:max-w-[1680px] mx-auto h-16 sm:h-18 px-4 sm:px-6 lg:px-8 rounded-2xl bg-slate-900/90 backdrop-blur-2xl border border-cyan-500/40 shadow-2xl shadow-cyan-950/70'
-						: 'w-full h-20 bg-slate-950/70 backdrop-blur-md border-b border-slate-800/80 px-4 sm:px-6 lg:px-8 2xl:px-12 rounded-none',
+						? 'w-full max-w-[1536px] 2xl:max-w-[1680px] mx-auto h-16 sm:h-18 px-3 sm:px-6 lg:px-8 rounded-2xl bg-slate-900/90 backdrop-blur-2xl border border-cyan-500/40 shadow-2xl shadow-cyan-950/70'
+						: 'w-full h-20 bg-slate-950/70 backdrop-blur-md border-b border-slate-800/80 px-3 sm:px-6 lg:px-8 2xl:px-12 rounded-none',
 				]"
 			>
 				<!-- ========================================================================= -->
@@ -64,26 +64,28 @@
 									{{ store.settings?.site_title || '泰山職訓－前端網頁技術與AI應用' }}
 								</span>
 							</div>
-							<span class="flex items-center gap-1 text-xs sm:text-sm text-slate-400 font-medium leading-none mt-1 truncate">
-								<span class="hidden sm:inline">泰山職業訓練場 ｜</span>
-								<svg
-									class="w-3.5 h-3.5 text-amber-400 shrink-0"
-									viewBox="0 0 24 24"
-									fill="none"
-									stroke="currentColor"
-									stroke-width="2.4"
-									stroke-linecap="round"
-									aria-hidden="true"
-								>
-									<line x1="12" y1="2.5" x2="12" y2="21.5" />
-									<line x1="2.5" y1="12" x2="21.5" y2="12" />
-									<line x1="5.3" y1="5.3" x2="18.7" y2="18.7" />
-									<line x1="18.7" y1="5.3" x2="5.3" y2="18.7" />
-									<line x1="8.4" y1="3.2" x2="15.6" y2="20.8" />
-									<line x1="3.2" y1="8.4" x2="20.8" y2="15.6" />
-								</svg>
-								<span class="text-amber-300 font-bold">培訓享每月 Claude AI 資源</span>
-							</span>
+							<div class="flex items-center flex-wrap gap-x-1.5 gap-y-0.5 text-xs sm:text-sm text-slate-400 font-medium leading-tight mt-0.5 sm:mt-1">
+								<span class="hidden 2xl:inline shrink-0">泰山職業訓練場 ｜</span>
+								<span class="inline-flex items-center gap-1 text-amber-300 font-bold min-w-0">
+									<svg
+										class="w-3.5 h-3.5 text-amber-400 shrink-0"
+										viewBox="0 0 24 24"
+										fill="none"
+										stroke="currentColor"
+										stroke-width="2.4"
+										stroke-linecap="round"
+										aria-hidden="true"
+									>
+										<line x1="12" y1="2.5" x2="12" y2="21.5" />
+										<line x1="2.5" y1="12" x2="21.5" y2="12" />
+										<line x1="5.3" y1="5.3" x2="18.7" y2="18.7" />
+										<line x1="18.7" y1="5.3" x2="5.3" y2="18.7" />
+										<line x1="8.4" y1="3.2" x2="15.6" y2="20.8" />
+										<line x1="3.2" y1="8.4" x2="20.8" y2="15.6" />
+									</svg>
+									<span>培訓享每月 Claude AI 資源</span>
+								</span>
+							</div>
 						</div>
 					</router-link>
 				</div>
@@ -130,7 +132,7 @@
 				</div>
 
 				<!-- Right: Action Button (窄平板顯示簡短文案，平板以上展開大字，筆電端空間自適應) -->
-				<div class="flex items-center justify-end flex-1 min-w-0 space-x-2 relative z-10">
+				<div class="flex items-center justify-end shrink-0 lg:flex-1 lg:min-w-0 space-x-2 relative z-10">
 					<router-link
 						to="/admission"
 						class="hidden sm:inline-flex items-center font-extrabold text-xs md:text-sm xl:text-base text-white bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 shadow-md shadow-cyan-500/25 hover:shadow-cyan-500/40 hover:scale-105 active:scale-95 transition-all flex-shrink-0 px-3 md:px-4 xl:px-5 py-2 xl:py-2.5 rounded-xl"
@@ -188,7 +190,7 @@
 				</div>
 
 				<div
-					class="max-w-[1536px] mx-auto px-4 sm:px-6 lg:px-8 2xl:px-12 h-full flex items-center justify-between relative z-10"
+					class="max-w-[1536px] mx-auto px-3 sm:px-6 lg:px-8 2xl:px-12 h-full flex items-center justify-between gap-2 relative z-10"
 				>
 					<!-- Left: Official Logo + AI Pulse -->
 					<div class="flex items-center justify-start flex-1 min-w-0">
@@ -210,26 +212,28 @@
 										{{ store.settings?.site_title || '泰山職訓－前端網頁技術與AI應用' }}
 									</span>
 								</div>
-								<span class="flex items-center gap-1 text-xs sm:text-sm text-slate-400 font-medium leading-none mt-1 truncate">
-									<span class="hidden sm:inline">泰山職業訓練場 ｜</span>
-									<svg
-										class="w-3.5 h-3.5 text-amber-400 shrink-0"
-										viewBox="0 0 24 24"
-										fill="none"
-										stroke="currentColor"
-										stroke-width="2.4"
-										stroke-linecap="round"
-										aria-hidden="true"
-									>
-										<line x1="12" y1="2.5" x2="12" y2="21.5" />
-										<line x1="2.5" y1="12" x2="21.5" y2="12" />
-										<line x1="5.3" y1="5.3" x2="18.7" y2="18.7" />
-										<line x1="18.7" y1="5.3" x2="5.3" y2="18.7" />
-										<line x1="8.4" y1="3.2" x2="15.6" y2="20.8" />
-										<line x1="3.2" y1="8.4" x2="20.8" y2="15.6" />
-									</svg>
-									<span class="text-amber-300 font-bold">培訓享每月 Claude AI 資源</span>
-								</span>
+								<div class="flex items-center flex-wrap gap-x-1.5 gap-y-0.5 text-xs sm:text-sm text-slate-400 font-medium leading-tight mt-0.5 sm:mt-1">
+									<span class="hidden 2xl:inline shrink-0">泰山職業訓練場 ｜</span>
+									<span class="inline-flex items-center gap-1 text-amber-300 font-bold min-w-0">
+										<svg
+											class="w-3.5 h-3.5 text-amber-400 shrink-0"
+											viewBox="0 0 24 24"
+											fill="none"
+											stroke="currentColor"
+											stroke-width="2.4"
+											stroke-linecap="round"
+											aria-hidden="true"
+										>
+											<line x1="12" y1="2.5" x2="12" y2="21.5" />
+											<line x1="2.5" y1="12" x2="21.5" y2="12" />
+											<line x1="5.3" y1="5.3" x2="18.7" y2="18.7" />
+											<line x1="18.7" y1="5.3" x2="5.3" y2="18.7" />
+											<line x1="8.4" y1="3.2" x2="15.6" y2="20.8" />
+											<line x1="3.2" y1="8.4" x2="20.8" y2="15.6" />
+										</svg>
+										<span>培訓享每月 Claude AI 資源</span>
+									</span>
+								</div>
 							</div>
 						</router-link>
 					</div>
@@ -274,7 +278,7 @@
 					</div>
 
 					<!-- Right: Action Button -->
-					<div class="flex items-center justify-end flex-1 min-w-0 space-x-2 relative z-10">
+					<div class="flex items-center justify-end shrink-0 lg:flex-1 lg:min-w-0 space-x-2 relative z-10">
 						<router-link
 							to="/admission"
 							class="hidden sm:inline-flex items-center px-4 xl:px-5 py-2 xl:py-2.5 rounded-xl font-extrabold text-sm xl:text-base text-white bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 shadow-md shadow-cyan-500/25 hover:shadow-cyan-500/40 hover:scale-105 active:scale-95 transition-all flex-shrink-0"
