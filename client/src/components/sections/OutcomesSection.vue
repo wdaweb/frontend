@@ -42,6 +42,9 @@
 			<!-- 6 大真實收穫網格 (手機橫向滑軌，桌機 md: 2 欄 / lg: 3 欄) -->
 			<div
 				id="outcomes-cards-grid"
+				tabindex="0"
+				role="region"
+				aria-label="學習成果卡片（手機版可左右滑動）"
 				class="flex md:grid md:grid-cols-2 lg:grid-cols-3 overflow-x-auto md:overflow-x-visible snap-x snap-mandatory scroll-smooth no-scrollbar -mx-4 px-4 md:mx-0 md:px-0 gap-4 sm:gap-6 pb-4 md:pb-0"
 			>
 				<!-- 收穫 1 -->

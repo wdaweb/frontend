@@ -44,6 +44,9 @@
 			<!-- 四大起點軌道 (手機版支援露邊橫向滑軌，桌機維持大器網格) -->
 			<div
 				id="tracks-cards-grid"
+				tabindex="0"
+				role="region"
+				aria-label="適合對象卡片（手機版可左右滑動）"
 				class="flex sm:grid sm:grid-cols-2 xl:grid-cols-4 overflow-x-auto sm:overflow-x-visible snap-x snap-mandatory scroll-smooth no-scrollbar -mx-4 px-4 sm:mx-0 sm:px-0 gap-4 sm:gap-6 pb-4 sm:pb-0"
 			>
 				<!-- 軌道 1 -->

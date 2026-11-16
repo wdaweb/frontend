@@ -55,42 +55,67 @@ class Command(BaseCommand):
                     synced_img_count += 1
         self.stdout.write(self.style.SUCCESS(f"   ✓ 已同步 {synced_img_count} 張縮圖至 client/public/projects/"))
 
-        # 3. 更新前端 store 快照 (useCmsStore.ts)
-        self.stdout.write("⚡ 3/5 正在更新前端 useCmsStore.ts 靜態快照與快取版本...")
+        # 3. 更新前端作品快照 (src/data/cmsDefaultSnapshots.ts) 與 store 快取版本 (useCmsStore.ts)
+        self.stdout.write("⚡ 3/5 正在更新前端 cmsDefaultSnapshots.ts 靜態快照與快取版本...")
+        snapshot_file = os.path.join(client_dir, "src", "data", "cmsDefaultSnapshots.ts")
         store_file = os.path.join(client_dir, "src", "stores", "useCmsStore.ts")
+
+        if not os.path.exists(snapshot_file):
+            self.stdout.write(self.style.ERROR(f"   ✗ 找不到前端快照檔：{snapshot_file}"))
+            sys.exit(1)
+
+        projects = list(StudentProject.objects.order_by('-is_featured', 'sort_order', '-created_at', '-id'))
+        lines = ['export const defaultProjects: StudentProject[] = [']
+        for p in projects:
+            img = f'./projects/project_{p.id}.webp' if p.cover_image else ''
+            alt = p.image_alt or f'{p.student_name} - {p.project_name}'
+            lines.append('\t{')
+            lines.append(f'\t\tid: {p.id},')
+            lines.append(f'\t\tstudent_name: {json.dumps(p.student_name, ensure_ascii=False)},')
+            lines.append(f'\t\tbatch_tag: {json.dumps(p.batch_tag, ensure_ascii=False)},')
+            lines.append(f'\t\tproject_name: {json.dumps(p.project_name, ensure_ascii=False)},')
+            lines.append(f'\t\tcover_image_url: {json.dumps(img, ensure_ascii=False)},')
+            lines.append(f'\t\timage_alt: {json.dumps(alt, ensure_ascii=False)},')
+            lines.append(f'\t\tdemo_url: {json.dumps(p.demo_url, ensure_ascii=False)},')
+            lines.append(f'\t\tgithub_url: {json.dumps(p.github_url, ensure_ascii=False)},')
+            lines.append(f'\t\tview_count: {p.view_count},')
+            lines.append(f'\t\tis_featured: {str(p.is_featured).lower()},')
+            lines.append(f'\t\tsort_order: {p.sort_order},')
+            lines.append('\t},')
+        lines.append(']')
+        ts_code = '\n'.join(lines)
+
+        with open(snapshot_file, 'r', encoding='utf-8', newline='') as f:
+            content = f.read()
+        newline = '\r\n' if '\r\n' in content else '\n'
+        content = content.replace('\r\n', '\n')
+
+        # 以函式作為取代內容，避免作品文字中的反斜線被當成正規表示式跳脫字元
+        content, replaced = re.subn(
+            r'export const defaultProjects: StudentProject\[\] = \[[\s\S]*?\n\]',
+            lambda _m: ts_code,
+            content,
+            count=1,
+        )
+        if replaced != 1:
+            self.stdout.write(self.style.ERROR("   ✗ 在 cmsDefaultSnapshots.ts 中找不到 defaultProjects 區塊，快照未更新"))
+            sys.exit(1)
+
+        with open(snapshot_file, 'w', encoding='utf-8', newline='') as f:
+            f.write(content.replace('\n', newline))
+
+        # 自動更新快取時間戳，確保訪客瀏覽器自動獲取最新版本
         if os.path.exists(store_file):
-            projects = list(StudentProject.objects.order_by('-is_featured', 'sort_order', '-created_at', '-id'))
-            lines = ['const defaultProjects: StudentProject[] = [']
-            for p in projects:
-                img = f'./projects/project_{p.id}.webp' if p.cover_image else ''
-                alt = p.image_alt or f'{p.student_name} - {p.project_name}'
-                lines.append('\t{')
-                lines.append(f'\t\tid: {p.id},')
-                lines.append(f'\t\tstudent_name: {json.dumps(p.student_name, ensure_ascii=False)},')
-                lines.append(f'\t\tbatch_tag: {json.dumps(p.batch_tag, ensure_ascii=False)},')
-                lines.append(f'\t\tproject_name: {json.dumps(p.project_name, ensure_ascii=False)},')
-                lines.append(f'\t\tcover_image_url: {json.dumps(img, ensure_ascii=False)},')
-                lines.append(f'\t\timage_alt: {json.dumps(alt, ensure_ascii=False)},')
-                lines.append(f'\t\tdemo_url: {json.dumps(p.demo_url, ensure_ascii=False)},')
-                lines.append(f'\t\tgithub_url: {json.dumps(p.github_url, ensure_ascii=False)},')
-                lines.append(f'\t\tview_count: {p.view_count},')
-                lines.append(f'\t\tis_featured: {str(p.is_featured).lower()},')
-                lines.append(f'\t\tsort_order: {p.sort_order},')
-                lines.append('\t},')
-            lines.append(']')
-            ts_code = '\n'.join(lines)
-
-            with open(store_file, 'r', encoding='utf-8') as f:
-                content = f.read()
-
-            content = re.sub(r'const defaultProjects: StudentProject\[\] = \[[\s\S]*?\n\]', ts_code, content)
-            # 自動更新快取時間戳，確保訪客瀏覽器自動獲取最新版本
+            with open(store_file, 'r', encoding='utf-8', newline='') as f:
+                store_content = f.read()
             new_cache_key = f"const CACHE_KEY = 'wdaweb_cms_cache_{int(time.time())}'"
-            content = re.sub(r"const CACHE_KEY = 'wdaweb_cms_cache_[^']*'", new_cache_key, content)
-
-            with open(store_file, 'w', encoding='utf-8') as f:
-                f.write(content)
-            self.stdout.write(self.style.SUCCESS(f"   ✓ 前端快照已同步 {len(projects)} 筆專案，快取已升級"))
+            store_content, key_replaced = re.subn(r"const CACHE_KEY = 'wdaweb_cms_cache_[^']*'", new_cache_key, store_content, count=1)
+            if key_replaced != 1:
+                self.stdout.write(self.style.WARNING("   ⚠️ 在 useCmsStore.ts 中找不到 CACHE_KEY，快取版本未升級"))
+            else:
+                with open(store_file, 'w', encoding='utf-8', newline='') as f:
+                    f.write(store_content)
+        self.stdout.write(self.style.SUCCESS(f"   ✓ 前端快照已同步 {len(projects)} 筆專案，快取已升級"))
 
         # 4. 更新 server/build.sh 觸發 Render 自動部署
         self.stdout.write("🌐 4/5 正在更新 Render 雲端自動部署觸發器...")

@@ -47,15 +47,18 @@ jobs:
       - name: Run Unit Tests
         run: npm run test
 
+      # 先取得 GitHub Pages 實際部署路徑（例：/frontend），供一般網址路由與資源路徑使用
+      - name: Setup Pages
+        id: pages
+        uses: actions/configure-pages@v5
+        with:
+          enablement: true
+
       - name: Build Project
         run: npm run build
         env:
           VITE_API_BASE_URL: ${{ secrets.VITE_API_BASE_URL || 'https://wdaweb.onrender.com/api/v1' }}
-
-      - name: Setup Pages
-        uses: actions/configure-pages@v5
-        with:
-          enablement: true
+          VITE_BASE_PATH: ${{ steps.pages.outputs.base_path }}
 
       - name: Upload Artifact
         uses: actions/upload-pages-artifact@v3

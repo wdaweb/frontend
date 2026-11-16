@@ -262,15 +262,16 @@ export function useBatchTimeline(batchesInput: MaybeRefOrGetter<AdmissionBatch[]
     if (status === 'active') {
       return 'bg-cyan-400 text-slate-950 font-black ring-4 ring-cyan-400/40 shadow-[0_0_16px_rgba(6,182,212,0.85)]'
     }
-    return 'bg-slate-800 text-slate-500 border border-slate-700/80'
+    // 未到達步驟：文字使用 slate-400，維持 WCAG AA 4.5:1 對比
+    return 'bg-slate-800 text-slate-400 border border-slate-700/80'
   }
 
   function getStepTextClass(batch: AdmissionBatch, stepNumber: number): string {
-    if (isBatchEnded(batch)) return 'text-slate-500'
+    if (isBatchEnded(batch)) return 'text-slate-400'
     const status = getStepStatus(batch, stepNumber)
     if (status === 'completed') return 'text-emerald-400 font-semibold'
     if (status === 'active') return 'text-cyan-300 font-bold'
-    return 'text-slate-500'
+    return 'text-slate-400'
   }
 
   function getTrainingProgress(batch: AdmissionBatch): TrainingProgress {

@@ -1,0 +1,67 @@
+name: Backend CI (Django 測試與部署檢查)
+
+on:
+  push:
+    branches:
+      - main
+      - master
+    paths:
+      - 'server/**'
+      - 'cms_data_backup.json'
+      - '.github/workflows/backend-ci.yml'
+  pull_request:
+    paths:
+      - 'server/**'
+      - 'cms_data_backup.json'
+      - '.github/workflows/backend-ci.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: Django Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: ./server
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: 'pip'
+          cache-dependency-path: server/requirements.txt
+
+      - name: Install Dependencies
+        run: pip install -r requirements.txt
+
+      - name: Check Missing Migrations
+        env:
+          DEBUG: 'True'
+        run: python manage.py makemigrations --check --dry-run
+
+      - name: Run Unit Tests
+        env:
+          DEBUG: 'True'
+        run: python manage.py test --verbosity 2
+
+      - name: Verify CMS Backup Can Be Imported
+        env:
+          DEBUG: 'True'
+        run: |
+          python manage.py migrate --no-input
+          python manage.py load_cms_backup ../cms_data_backup.json
+
+      - name: Production Settings Check
+        env:
+          DEBUG: 'False'
+          SECRET_KEY: ci-only-${{ github.run_id }}-not-used-in-production-0123456789abcdef
+          ALLOW_SQLITE_IN_PRODUCTION: 'True'
+        run: python manage.py check --deploy --fail-level ERROR

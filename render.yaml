@@ -4,7 +4,7 @@ services:
     env: python
     rootDir: server
     buildCommand: "./build.sh"
-    startCommand: "gunicorn core.wsgi:application --bind 0.0.0.0:$PORT"
+    startCommand: "gunicorn core.wsgi:application --bind 0.0.0.0:$PORT --timeout 120"
     envVars:
       - key: PYTHON_VERSION
         value: 3.12.0
@@ -13,4 +13,11 @@ services:
       - key: SECRET_KEY
         generateValue: true
       - key: ALLOWED_HOSTS
-        value: "*"
+        value: "wdaweb.onrender.com"
+      # 以下密鑰請於 Render 後台填入，不納入版本控管
+      - key: CRON_SECRET_TOKEN
+        sync: false
+      - key: DJANGO_SUPERUSER_PASSWORD
+        sync: false
+      - key: DATABASE_URL
+        sync: false

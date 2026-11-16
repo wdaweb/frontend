@@ -74,9 +74,11 @@ export function useSeoMeta(options: SeoMetaOptions | (() => SeoMetaOptions)) {
     document.title = fullTitle
 
     // 2. Canonical & OG URL
-    const canonicalUrl = opts.canonicalPath
-      ? `${BASE_URL}${opts.canonicalPath.startsWith('/') ? '' : '/'}${opts.canonicalPath}`
-      : BASE_URL + '/'
+    // 子頁網址一律以斜線結尾（GitHub Pages 會把 /admission 轉址到 /admission/）
+    const rawPath = opts.canonicalPath || '/'
+    const withLeading = rawPath.startsWith('/') ? rawPath : `/${rawPath}`
+    const normalizedPath = withLeading.endsWith('/') ? withLeading : `${withLeading}/`
+    const canonicalUrl = `${BASE_URL}${normalizedPath}`
     updateCanonical(canonicalUrl)
     updateMetaTag('og:url', canonicalUrl, true)
 

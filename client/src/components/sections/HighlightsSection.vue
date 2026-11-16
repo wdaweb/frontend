@@ -40,13 +40,16 @@
 
 			<div
 				id="highlights-cards-grid"
+				tabindex="0"
+				role="region"
+				aria-label="課程亮點卡片（手機版可左右滑動）"
 				class="flex md:grid md:grid-cols-2 xl:grid-cols-4 overflow-x-auto md:overflow-x-visible snap-x snap-mandatory scroll-smooth no-scrollbar -mx-4 px-4 md:mx-0 md:px-0 gap-4 sm:gap-6 pb-4 md:pb-0"
 			>
 				<!-- 1. 老師陪你拆解問題 (Cyan Theme) -->
 				<div
 					class="highlight-card card-subsurface-glow relative rounded-3xl p-5 sm:p-6 bg-slate-900/80 backdrop-blur-xl border border-slate-800/90 shadow-xl shadow-slate-950/60 flex flex-col justify-between overflow-hidden cursor-default w-[78vw] sm:w-[320px] max-w-[340px] shrink-0 snap-start md:w-full md:max-w-none md:shrink"
 				>
-					<div
+					<div aria-hidden="true"
 						class="absolute -right-2 -bottom-4 text-7xl font-mono font-black text-slate-800/20 select-none pointer-events-none"
 					>
 						01
@@ -77,7 +80,7 @@
 				<div
 					class="highlight-card card-subsurface-blue relative rounded-3xl p-5 sm:p-6 bg-slate-900/80 backdrop-blur-xl border border-slate-800/90 shadow-xl shadow-slate-950/60 flex flex-col justify-between overflow-hidden cursor-default w-[78vw] sm:w-[320px] max-w-[340px] shrink-0 snap-start md:w-full md:max-w-none md:shrink"
 				>
-					<div
+					<div aria-hidden="true"
 						class="absolute -right-2 -bottom-4 text-7xl font-mono font-black text-slate-800/20 select-none pointer-events-none"
 					>
 						02
@@ -110,7 +113,7 @@
 				<div
 					class="highlight-card card-subsurface-glow relative rounded-3xl p-5 sm:p-6 bg-slate-900/80 backdrop-blur-xl border border-slate-800/90 shadow-xl shadow-slate-950/60 flex flex-col justify-between overflow-hidden cursor-default w-[78vw] sm:w-[320px] max-w-[340px] shrink-0 snap-start md:w-full md:max-w-none md:shrink"
 				>
-					<div
+					<div aria-hidden="true"
 						class="absolute -right-2 -bottom-4 text-7xl font-mono font-black text-slate-800/20 select-none pointer-events-none"
 					>
 						03
@@ -141,7 +144,7 @@
 				<div
 					class="highlight-card card-subsurface-glow relative rounded-3xl p-5 sm:p-6 bg-slate-900/80 backdrop-blur-xl border border-slate-800/90 shadow-xl shadow-slate-950/60 flex flex-col justify-between overflow-hidden cursor-default w-[78vw] sm:w-[320px] max-w-[340px] shrink-0 snap-start md:w-full md:max-w-none md:shrink"
 				>
-					<div
+					<div aria-hidden="true"
 						class="absolute -right-2 -bottom-4 text-7xl font-mono font-black text-slate-800/20 select-none pointer-events-none"
 					>
 						04

@@ -94,6 +94,9 @@
 				<div class="relative z-10 flex flex-col justify-center space-y-0 sm:space-y-6">
 					<!-- 3 大核心 AI 輔助應用卡片 (手機橫向滑軌避免堆疊 750px，桌機 3 欄並排大氣) -->
 					<div
+						tabindex="0"
+						role="region"
+						aria-label="AI 協同開發流程卡片（手機版可左右滑動）"
 						class="flex md:grid md:grid-cols-3 overflow-x-auto md:overflow-x-visible snap-x snap-mandatory scroll-smooth no-scrollbar -mx-1 px-1 md:mx-0 md:px-0 gap-4 sm:gap-6 py-1 md:py-0 items-stretch"
 					>
 						<!-- 卡片 1 -->

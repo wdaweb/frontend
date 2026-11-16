@@ -19,17 +19,17 @@
       class="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-cyan-400 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"
     ></div>
 
-    <!-- 角落序號水印 (01, 02) -->
+    <!-- 角落序號水印 (01, 02)：純裝飾，以 CSS 偽元素呈現，不被讀屏與對比檢測視為內文 -->
     <div
-      class="absolute -right-2 -bottom-4 text-7xl font-mono font-black select-none pointer-events-none transition-colors"
+      aria-hidden="true"
+      :data-watermark="String(index + 1).padStart(2, '0')"
+      class="absolute -right-2 -bottom-4 text-7xl font-mono font-black select-none pointer-events-none transition-colors before:content-[attr(data-watermark)]"
       :class="
         isEnded
           ? 'text-slate-800/30'
           : 'text-slate-800/20 group-hover:text-cyan-500/10'
       "
-    >
-      {{ String(index + 1).padStart(2, '0') }}
-    </div>
+    ></div>
 
     <!-- 官方完訓認證印章水印 (僅已結訓期別顯現，極具公信力與授證質感) -->
     <div
@@ -39,7 +39,7 @@
       <div
         class="transform rotate-12 border-2 border-slate-700/80 rounded-2xl px-3 py-1.5 sm:px-4 sm:py-2 bg-slate-900/90 backdrop-blur-md flex flex-col items-center justify-center shadow-xl shadow-black/60"
       >
-        <span class="text-xs font-mono font-bold tracking-widest text-slate-400 uppercase">
+        <span class="text-xs font-mono font-bold tracking-widest text-slate-300 uppercase">
           TAISHAN WDA · 920H
         </span>
         <span class="text-xs sm:text-sm font-black tracking-wider text-slate-200 flex items-center space-x-1 mt-0.5">

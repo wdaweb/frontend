@@ -19,22 +19,19 @@
           <div
             v-for="(project, index) in displayedProjects"
             :key="project.id"
-            class="showcase-card h-84 perspective-1000 group cursor-pointer rounded-3xl focus-visible:ring-2 focus-visible:ring-cyan-400 focus:outline-none transform-gpu"
-            tabindex="0"
-            role="button"
-            :aria-expanded="flippedIds.has(project.id)"
-            :aria-label="`${project.project_name} 專案卡片，作者 ${project.student_name}，按 Enter 或 Space 鍵翻轉查看詳情`"
+            class="showcase-card h-84 perspective-1000 group cursor-pointer rounded-3xl transform-gpu"
             @click="toggleFlip(project.id)"
-            @keydown.enter.prevent="toggleFlip(project.id)"
-            @keydown.space.prevent="toggleFlip(project.id)"
           >
+            <!-- 無障礙：卡片外層僅供滑鼠點擊翻轉；鍵盤與讀屏使用者改由正面的「查看 Demo」按鈕操作，避免互動元素巢狀 -->
             <!-- 翻轉內層容器 -->
             <div
               class="relative w-full h-full duration-500 transform-style-3d transition-transform rounded-3xl shadow-xl"
               :class="flippedIds.has(project.id) ? 'rotate-y-180' : ''"
             >
               <!-- 1. 卡片正面 (對齊全站深色科技主題與極光流光線) -->
-              <div class="card-subsurface-glow absolute inset-0 w-full h-full backface-hidden rounded-3xl overflow-hidden bg-slate-900/70 hover:bg-slate-900/90 backdrop-blur-xl border border-slate-800/90 flex flex-col justify-between shadow-xl shadow-slate-950/60">
+              <div
+                :aria-hidden="flippedIds.has(project.id)"
+                class="card-subsurface-glow absolute inset-0 w-full h-full backface-hidden rounded-3xl overflow-hidden bg-slate-900/70 hover:bg-slate-900/90 backdrop-blur-xl border border-slate-800/90 flex flex-col justify-between shadow-xl shadow-slate-950/60">
                 <!-- 頂部流光光暈線 (Hover 時優雅顯現) -->
                 <div class="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-cyan-400 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none z-20"></div>
 
@@ -73,21 +70,30 @@
                     <span class="text-sm text-slate-300 font-semibold">
                       {{ project.batch_tag }}
                     </span>
-                    <span class="text-sm text-cyan-400 font-bold group-hover:translate-x-0.5 transition-transform flex items-center space-x-1">
+                    <button
+                      type="button"
+                      :tabindex="flippedIds.has(project.id) ? -1 : 0"
+                      :aria-expanded="flippedIds.has(project.id)"
+                      :aria-label="`查看 ${project.project_name}（作者 ${project.student_name}）的專案詳情與 Demo 連結`"
+                      @click.stop="toggleFlipAndFocus(project.id, $event, 'a')"
+                      class="text-sm text-cyan-400 font-bold group-hover:translate-x-0.5 transition-transform flex items-center space-x-1 rounded-md focus-visible:ring-2 focus-visible:ring-cyan-400 focus:outline-none"
+                    >
                       <span>查看 Demo</span>
-                      <span>↷</span>
-                    </span>
+                      <span aria-hidden="true">↷</span>
+                    </button>
                   </div>
                 </div>
               </div>
 
               <!-- 2. 卡片背面 (展示詳細資訊與 Demo 連結，加入滾動防呆保護) -->
-              <div class="card-subsurface-glow absolute inset-0 w-full h-full backface-hidden rotate-y-180 rounded-3xl p-5 sm:p-6 bg-slate-900/95 backdrop-blur-xl border border-cyan-500/40 flex flex-col justify-between shadow-2xl shadow-cyan-950/60 overflow-y-auto no-scrollbar">
+              <div
+                :aria-hidden="!flippedIds.has(project.id)"
+                class="card-subsurface-glow absolute inset-0 w-full h-full backface-hidden rotate-y-180 rounded-3xl p-5 sm:p-6 bg-slate-900/95 backdrop-blur-xl border border-cyan-500/40 flex flex-col justify-between shadow-2xl shadow-cyan-950/60 overflow-y-auto no-scrollbar">
                 <!-- 頂部流光光暈線 -->
                 <div class="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-cyan-400 to-transparent"></div>
 
                 <!-- 角落序號水印 (01~08) -->
-                <div class="absolute -right-2 -bottom-4 text-7xl font-mono font-black text-slate-800/20 group-hover:text-cyan-500/10 transition-colors select-none pointer-events-none">
+                <div aria-hidden="true" class="absolute -right-2 -bottom-4 text-7xl font-mono font-black text-slate-800/20 group-hover:text-cyan-500/10 transition-colors select-none pointer-events-none">
                   {{ String(index + 1).padStart(2, '0') }}
                 </div>
 
@@ -122,7 +128,7 @@
                     type="button"
                     :tabindex="flippedIds.has(project.id) ? 0 : -1"
                     aria-label="返回正面卡片"
-                    @click.stop="toggleFlip(project.id)"
+                    @click.stop="toggleFlipAndFocus(project.id, $event, 'button[aria-expanded]')"
                     class="w-full py-1.5 rounded-xl text-center font-medium text-sm text-slate-300 hover:text-white bg-slate-800/40 hover:bg-slate-800 transition-colors focus-visible:ring-2 focus-visible:ring-cyan-400 focus:outline-none"
                   >
                     返回正面
@@ -329,6 +335,16 @@ function toggleFlip(id: number) {
   } else {
     flippedIds.value.add(id)
   }
+}
+
+// 鍵盤操作翻轉後，把焦點移到翻轉後可見的那一面，避免焦點停在已隱藏的元素上
+function toggleFlipAndFocus(id: number, event: Event, targetSelector: string) {
+  toggleFlip(id)
+  const card = (event.currentTarget as HTMLElement | null)?.closest('.showcase-card')
+  nextTick(() => {
+    const target = card?.querySelector<HTMLElement>(targetSelector)
+    target?.focus({ preventScroll: true })
+  })
 }
 
 function handleView(id: number) {

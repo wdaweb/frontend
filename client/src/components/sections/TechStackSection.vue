@@ -45,6 +45,9 @@
 			<!-- 1. 8 大核心技術卡片網格 (手機橫向滑軌，桌機 xl: 4 欄) -->
 			<div
 				id="tech-cards-grid"
+				tabindex="0"
+				role="region"
+				aria-label="核心技術卡片（手機版可左右滑動）"
 				class="flex sm:grid sm:grid-cols-2 xl:grid-cols-4 overflow-x-auto sm:overflow-x-visible snap-x snap-mandatory scroll-smooth no-scrollbar -mx-4 px-4 sm:mx-0 sm:px-0 gap-4 sm:gap-6 pb-4 sm:pb-0 mb-8"
 			>
 				<div
@@ -53,7 +56,7 @@
 					class="tech-card card-subsurface-glow relative rounded-3xl p-5 sm:p-6 bg-slate-900/80 backdrop-blur-xl border border-slate-800/90 shadow-xl shadow-slate-950/60 flex flex-col justify-between overflow-hidden cursor-default w-[78vw] max-w-[320px] shrink-0 snap-start sm:w-full sm:max-w-none sm:shrink"
 				>
 					<!-- 角落序號水印 (01~08) -->
-					<div
+					<div aria-hidden="true"
 						class="absolute -right-2 -bottom-4 text-6xl sm:text-7xl font-mono font-black text-slate-800/20 select-none pointer-events-none"
 					>
 						{{ String(index + 1).padStart(2, '0') }}

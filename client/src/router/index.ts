@@ -1,4 +1,4 @@
-import { createRouter, createWebHashHistory, type RouteRecordRaw } from 'vue-router'
+import { createRouter, createWebHistory, type RouteRecordRaw } from 'vue-router'
 import HomeView from '@/views/HomeView.vue'
 
 const routes: RouteRecordRaw[] = [
@@ -52,12 +52,18 @@ const routes: RouteRecordRaw[] = [
   }
 ]
 
+// 採用一般網址 (History) 路由：每個分頁都有獨立網址，搜尋引擎可個別收錄
+// 部署路徑由 vite.config.ts 的 base 決定（GitHub Pages 專案站為 /<儲存庫名稱>/）
 const router = createRouter({
-  history: createWebHashHistory(),
+  history: createWebHistory(import.meta.env.BASE_URL),
   routes,
-  scrollBehavior(_to, _from, savedPosition) {
+  scrollBehavior(to, _from, savedPosition) {
     if (savedPosition) {
       return savedPosition
+    }
+    // 頁內錨點（如「跳至主要內容」）直接捲動到對應元素
+    if (to.hash) {
+      return { el: to.hash, behavior: 'smooth' }
     }
     return { top: 0, behavior: 'smooth' }
   }

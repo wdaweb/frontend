@@ -17,13 +17,13 @@
     </script>
 
     <!-- 網站圖示 Favicon (勞動部勞動力發展署官方識別標誌，符合 Google 搜尋結果 48px 倍數規範) -->
-    <link rel="icon" type="image/png" sizes="192x192" href="./favicon-192x192.png" />
-    <link rel="icon" type="image/png" sizes="96x96" href="./favicon-96x96.png" />
-    <link rel="icon" type="image/png" sizes="48x48" href="./favicon-48x48.png" />
-    <link rel="icon" type="image/png" sizes="32x32" href="./favicon-32x32.png" />
-    <link rel="icon" type="image/png" href="./favicon.png" />
-    <link rel="shortcut icon" href="./favicon.ico" />
-    <link rel="apple-touch-icon" sizes="180x180" href="./favicon.png" />
+    <link rel="icon" type="image/png" sizes="192x192" href="/favicon-192x192.png" />
+    <link rel="icon" type="image/png" sizes="96x96" href="/favicon-96x96.png" />
+    <link rel="icon" type="image/png" sizes="48x48" href="/favicon-48x48.png" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
+    <link rel="icon" type="image/png" href="/favicon.png" />
+    <link rel="shortcut icon" href="/favicon.ico" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/favicon.png" />
 
     <!-- 基礎 SEO Meta 標籤 (涵蓋「前端課程」精確詞組與核心搜尋意圖) -->
     <meta name="google-site-verification" content="xWjiZf9S8lAD3VVm8OOtZgG0aaVX_4mUOreCqtWiTPI" />
@@ -46,7 +46,9 @@
     <meta property="og:title" content="泰山職訓「前端網頁技術與AI應用」前端課程｜920 小時政府全額補助實體培訓" />
     <meta property="og:description" content="【政府全額補助前端課程】920 小時實體紮實養成！一人獨立雙螢幕、培訓期間享每月專屬 Claude AI 實戰資源，涵蓋 Vue 3、TypeScript、AI 輔助開發與專題作品集，待業民眾享 100% 全額免費受訓與每月生活津貼補助！" />
     <meta property="og:url" content="https://wdaweb.github.io/frontend/" />
-    <meta property="og:image" content="https://powerkaifu.github.io/wdaweb/favicon.png" />
+    <meta property="og:image" content="https://wdaweb.github.io/frontend/og-image.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
     <meta property="og:image:alt" content="泰山職訓「前端網頁技術與AI應用」專班招生封面" />
     <meta property="og:locale" content="zh_TW" />
 
@@ -54,7 +56,7 @@
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content="泰山職訓「前端網頁技術與AI應用」前端課程｜920 小時政府全額補助實體培訓" />
     <meta name="twitter:description" content="【政府全額補助前端課程】920 小時實體密集培訓！培訓期間享每月專屬 Claude AI 實戰資源，待業民眾享 100% 全額免費受訓與每月生活津貼補助，打造個人專屬作品集！" />
-    <meta name="twitter:image" content="https://powerkaifu.github.io/wdaweb/favicon.png" />
+    <meta name="twitter:image" content="https://wdaweb.github.io/frontend/og-image.png" />
 
     <!-- Google 官方推薦 Schema.org JSON-LD 結構化資料 (WebSite + EducationalOrganization + Course) -->
     <script type="application/ld+json">
@@ -66,7 +68,7 @@
           "@id": "https://wdaweb.github.io/frontend/#website",
           "url": "https://wdaweb.github.io/frontend/",
           "name": "泰山職訓「前端網頁技術與AI應用」｜920 小時實體培訓，全額補助，從零開始",
-          "description": "勞動部勞動力發展署北分署泰山職業訓練場「前端網頁技術與AI應用」培訓課程與學員成果展示官方推廣網。",
+          "description": "勞動部勞動力發展署北分署泰山職業訓練場「前端網頁技術與AI應用」培訓課程與學員成果展示推廣網（由前端班師資團隊維護）。",
           "publisher": {
             "@id": "https://wdaweb.github.io/frontend/#organization"
           },
@@ -82,7 +84,7 @@
             "https://tkyhkm.wda.gov.tw",
             "https://its.taiwanjobs.gov.tw"
           ],
-          "logo": "https://powerkaifu.github.io/wdaweb/favicon.png",
+          "logo": "https://wdaweb.github.io/frontend/logo.png",
           "telephone": "+886-2-2901-8274",
           "address": {
             "@type": "PostalAddress",
@@ -145,8 +147,8 @@
     }
     </script>
 
-    <!-- FAQPage 結構化資料 (靜態降級版，讓 Google 不執行 JS 也能讀到 FAQ 富摘要) -->
-    <script type="application/ld+json">
+    <!-- FAQPage 結構化資料 (靜態降級版，讓 Google 不執行 JS 也能讀到 FAQ 富摘要；打包後僅保留於首頁與 FAQ 頁) -->
+    <script type="application/ld+json" id="static-faq-jsonld">
     {
       "@context": "https://schema.org",
       "@type": "FAQPage",
@@ -156,7 +158,7 @@
           "name": "泰山職訓前端課程需要收費嗎？",
           "acceptedAnswer": {
             "@type": "Answer",
-            "text": "不需要。泰山職業訓練場「前端網頁技術與AI應用」為勞動部政府自辦職前訓練，待業民眾經甄試錄取後享 100% 全額免費受訓，無任何學費負擔。符合特定資格者還可申請每月職業訓練生活津貼補助，是新北市最完整的免費前端工程師培訓課程。"
+            "text": "不需要。泰山職業訓練場「前端網頁技術與AI應用」為勞動部政府自辦職前訓練，待業民眾經甄試錄取後享 100% 全額免費受訓，無任何學費負擔。符合特定資格者還可申請每月職業訓練生活津貼補助。"
           }
         },
         {
@@ -164,7 +166,7 @@
           "name": "前端課程需要有程式基礎才能報名嗎？",
           "acceptedAnswer": {
             "@type": "Answer",
-            "text": "不需要任何前端開發基礎。泰山職訓「前端網頁技術與AI應用」課程從 HTML/CSS 第一行程式碼開始教授，設計給完全零基礎的跨領域轉職者，一人一機獨立雙螢幕實作並提供培訓期間每月專屬 Claude AI 實戰資源，配有業師全程帶領，是政府補助前端課程中最適合新手的選擇。"
+            "text": "不需要任何前端開發基礎。泰山職訓「前端網頁技術與AI應用」課程從 HTML/CSS 第一行程式碼開始教授，設計給完全零基礎的跨領域轉職者，一人一機獨立雙螢幕實作並提供培訓期間每月專屬 Claude AI 實戰資源，配有業師全程帶領。"
           }
         },
         {
@@ -180,7 +182,7 @@
           "name": "920 小時的前端課程包含哪些內容？",
           "acceptedAnswer": {
             "@type": "Answer",
-            "text": "課程涵蓋 7 大模組共 920 小時：(1) 前端視覺設計—HTML5/CSS3/Tailwind CSS；(2) JavaScript 核心與 API 串接；(3) Vue 3 漸進式框架與 TypeScript 前端工程化；(4) GSAP 動態特效；(5) AI 工具整合—培訓期間提供學員每月專屬 Claude AI 實戰資源，結合 GitHub Copilot/Cursor 輔助開發；(6) 全端架構與資料庫；(7) 期末獨立專題製作與成果發表展。是台灣政府自辦職訓中最完整的前端工程師培訓課程。"
+            "text": "課程涵蓋 7 大模組共 920 小時：(1) 前端視覺設計—HTML5/CSS3/Tailwind CSS；(2) JavaScript 核心與 API 串接；(3) Vue 3 漸進式框架與 TypeScript 前端工程化；(4) GSAP 動態特效；(5) AI 工具整合—培訓期間提供學員每月專屬 Claude AI 實戰資源，結合 GitHub Copilot/Cursor 輔助開發；(6) 全端架構與資料庫；(7) 期末獨立專題製作與成果發表展。"
           }
         },
         {
@@ -188,7 +190,7 @@
           "name": "新北市哪裡有免費的前端工程師培訓課程？",
           "acceptedAnswer": {
             "@type": "Answer",
-            "text": "勞動部泰山職業訓練場位於新北市泰山區貴子里致遠新村 55 之 1 號（明志科技大學校區內），提供 920 小時全額免費的「前端網頁技術與AI應用」培訓課程，是新北市規模最大的政府補助前端課程，一人一機雙螢幕實作、培訓期間享每月專屬 Claude AI 實戰資源，另提供宿舍申請服務。"
+            "text": "勞動部泰山職業訓練場位於新北市泰山區貴子里致遠新村 55 之 1 號（明志科技大學校區內），提供 920 小時全額免費的「前端網頁技術與AI應用」培訓課程，一人一機雙螢幕實作、培訓期間享每月專屬 Claude AI 實戰資源，另提供宿舍申請服務。"
           }
         },
         {
@@ -203,22 +205,21 @@
     }
     </script>
 
-    <!-- GitHub Pages SPA 乾淨路由重定向接收器 (配合 404.html 杜絕子路由 404 並自動導流至目標頁面) -->
+    <!-- GitHub Pages SPA 轉址接收器：404.html 把未知路徑轉成 ?/path，這裡還原成一般網址交給 Vue Router -->
     <script>
       (function(l) {
         if (l.search && l.search[1] === '/' ) {
-          var decoded = l.search.slice(1).split('&').map(function(s) { 
+          var decoded = l.search.slice(1).split('&').map(function(s) {
             return s.replace(/~and~/g, '&')
           }).join('?');
-          window.location.replace(l.pathname.replace(/\/$/, '') + '/#' + decoded);
+          window.history.replaceState(null, '', l.pathname.slice(0, -1) + decoded + l.hash);
+        } else if (l.hash.indexOf('#/') === 0) {
+          // 舊版 Hash 網址相容：/frontend/#/admission → /frontend/admission，保留已分享出去的舊連結
+          var root = l.pathname.replace(/index\.html$/, '').replace(/\/$/, '');
+          window.history.replaceState(null, '', root + l.hash.slice(1));
         }
       }(window.location))
     </script>
-
-    <!-- Favicons -->
-    <link rel="icon" type="image/svg+xml" href="./favicon.svg" />
-    <link rel="icon" type="image/png" href="./favicon.png" />
-    <link rel="apple-touch-icon" href="./favicon.png" />
 
     <!-- 關鍵內聯樣式：確保 F5 重新整理時 0 毫秒維持暗黑深底，徹底消除瀏覽器預設白底與未渲染 HTML 閃爍 (Zero FOUC) -->
     <style>
@@ -250,10 +251,10 @@
       }
     </style>
 
-    <!-- Google Fonts: 現代科技英文字體 Plus Jakarta Sans、繁體中文思源黑體 Noto Sans TC、等寬 JetBrains Mono -->
+    <!-- Google Fonts: 現代科技英文字體 Plus Jakarta Sans、繁體中文思源黑體 Noto Sans TC、等寬 JetBrains Mono（僅載入實際使用的字重 400~900，不含斜體） -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,400..800;1,400..800&family=Noto+Sans+TC:wght@300..900&family=Plus+Jakarta+Sans:ital,wght@0,300..800;1,300..800&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400..800&family=Noto+Sans+TC:wght@400..900&family=Plus+Jakarta+Sans:wght@400..800&display=swap" rel="stylesheet" />
   </head>
   <body class="bg-slate-950 text-slate-100 antialiased selection:bg-cyan-500/30 selection:text-cyan-200">
     <div id="app">
@@ -269,10 +270,10 @@
       <header>
         <nav>
           <a href="https://wdaweb.github.io/frontend/">課程特色</a>
-          <a href="https://wdaweb.github.io/frontend/admission">招生期別與報名</a>
-          <a href="https://wdaweb.github.io/frontend/showcase">學員專題成果</a>
-          <a href="https://wdaweb.github.io/frontend/faq">常見問題 FAQ</a>
-          <a href="https://wdaweb.github.io/frontend/community">Discord 線上諮詢</a>
+          <a href="https://wdaweb.github.io/frontend/admission/">招生期別與報名</a>
+          <a href="https://wdaweb.github.io/frontend/showcase/">學員專題成果</a>
+          <a href="https://wdaweb.github.io/frontend/faq/">常見問題 FAQ</a>
+          <a href="https://wdaweb.github.io/frontend/community/">Discord 線上諮詢</a>
         </nav>
       </header>
       <main>
@@ -280,7 +281,7 @@
           <header>
             <p>✨ 勞動部自辦職前訓練 ｜ 920 小時實體密集培訓 ｜ 待業者 100% 全額免費</p>
             <h1>泰山職訓「前端網頁技術與AI應用」前端課程｜920 小時政府全額補助實體培訓專班</h1>
-            <p>【政府全額補助前端課程首選】從第一行程式碼，到具備 AI 協作能力的前端工程師。待業者經甄試錄取享 100% 全額免費培訓與生活津貼補助。</p>
+            <p>【政府全額補助前端課程】從第一行程式碼，到具備 AI 協作能力的前端工程師。待業者經甄試錄取享 100% 全額免費培訓與生活津貼補助。</p>
           </header>
           <section>
             <h2>訓練核心指標</h2>

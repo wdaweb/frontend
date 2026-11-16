@@ -41,6 +41,9 @@
 			<!-- 4 階段學習歷程卡片網格 (手機橫向微滑軌，桌機 xl: 4 欄) -->
 			<div
 				id="learning-path-cards"
+				tabindex="0"
+				role="region"
+				aria-label="學習路徑卡片（手機版可左右滑動）"
 				class="flex sm:grid sm:grid-cols-2 xl:grid-cols-4 overflow-x-auto sm:overflow-x-visible snap-x snap-mandatory scroll-smooth no-scrollbar -mx-4 px-4 sm:mx-0 sm:px-0 gap-4 sm:gap-6 pb-4 sm:pb-0 relative z-10"
 			>
 				<!-- 階段 1 -->
@@ -48,7 +51,7 @@
 					class="learning-path-card card-subsurface-glow relative rounded-3xl p-5 sm:p-7 bg-slate-900/80 backdrop-blur-xl border border-slate-800/90 shadow-xl shadow-slate-950/60 flex flex-col justify-between overflow-hidden hover:border-cyan-500/50 transition-[border-color,box-shadow] duration-300 cursor-default w-[78vw] max-w-[320px] shrink-0 snap-start sm:w-full sm:max-w-none sm:shrink"
 				>
 					<!-- 角落序號水印 -->
-					<div
+					<div aria-hidden="true"
 						class="absolute -right-2 -bottom-4 text-6xl sm:text-7xl font-mono font-black text-slate-800/20 select-none pointer-events-none"
 					>
 						01
@@ -88,7 +91,7 @@
 					class="learning-path-card card-subsurface-glow relative rounded-3xl p-5 sm:p-7 bg-slate-900/80 backdrop-blur-xl border border-slate-800/90 shadow-xl shadow-slate-950/60 flex flex-col justify-between overflow-hidden hover:border-blue-500/50 transition-[border-color,box-shadow] duration-300 cursor-default w-[78vw] max-w-[320px] shrink-0 snap-start sm:w-full sm:max-w-none sm:shrink"
 				>
 					<!-- 角落序號水印 -->
-					<div
+					<div aria-hidden="true"
 						class="absolute -right-2 -bottom-4 text-6xl sm:text-7xl font-mono font-black text-slate-800/20 select-none pointer-events-none"
 					>
 						02
@@ -130,7 +133,7 @@
 					class="learning-path-card card-subsurface-glow relative rounded-3xl p-5 sm:p-7 bg-slate-900/80 backdrop-blur-xl border border-slate-800/90 shadow-xl shadow-slate-950/60 flex flex-col justify-between overflow-hidden hover:border-purple-500/50 transition-[border-color,box-shadow] duration-300 cursor-default w-[78vw] max-w-[320px] shrink-0 snap-start sm:w-full sm:max-w-none sm:shrink"
 				>
 					<!-- 角落序號水印 -->
-					<div
+					<div aria-hidden="true"
 						class="absolute -right-2 -bottom-4 text-6xl sm:text-7xl font-mono font-black text-slate-800/20 select-none pointer-events-none"
 					>
 						03
@@ -172,7 +175,7 @@
 					class="learning-path-card card-subsurface-glow relative rounded-3xl p-5 sm:p-7 bg-slate-900/80 backdrop-blur-xl border border-slate-800/90 shadow-xl shadow-slate-950/60 flex flex-col justify-between overflow-hidden hover:border-emerald-500/50 transition-[border-color,box-shadow] duration-300 cursor-default w-[78vw] max-w-[320px] shrink-0 snap-start sm:w-full sm:max-w-none sm:shrink"
 				>
 					<!-- 角落序號水印 -->
-					<div
+					<div aria-hidden="true"
 						class="absolute -right-2 -bottom-4 text-6xl sm:text-7xl font-mono font-black text-slate-800/20 select-none pointer-events-none"
 					>
 						04

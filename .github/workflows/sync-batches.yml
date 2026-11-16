@@ -34,9 +34,11 @@ jobs:
             BASE_URL="https://wdaweb.onrender.com"
           fi
 
+          # 密鑰只能來自 GitHub Secrets，未設定時直接失敗（不提供任何預設值）
           TOKEN="${{ secrets.CRON_SECRET_TOKEN }}"
           if [ -z "$TOKEN" ]; then
-            TOKEN="wdaweb-cron-sync-token-2026"
+            echo "❌ 尚未於 GitHub Secrets 設定 CRON_SECRET_TOKEN，無法觸發同步。"
+            exit 1
           fi
 
           TARGET_URL="${BASE_URL%/}/api/v1/cron/batches/sync"

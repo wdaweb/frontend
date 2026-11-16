@@ -1,8 +1,10 @@
 import os
+import hmac
 from typing import List, Optional
 from ninja import NinjaAPI
 from ninja.security import django_auth
 from django.shortcuts import get_object_or_404
+from django.conf import settings
 from django.core.cache import cache
 from django.db.models import F
 from apps.cms.models import (
@@ -18,7 +20,10 @@ from .schemas import (
 api = NinjaAPI(
     title="泰山職訓「前端網頁技術與AI應用」招生推廣系統 API",
     version="1.0.0",
-    description="提供前台 Vue 3 招生網站所需要之動態資料與互動介面"
+    description="提供前台 Vue 3 招生網站所需要之動態資料與互動介面",
+    # 正式環境不對外公開 Swagger 文件與 OpenAPI 結構
+    docs_url="/docs" if settings.DEBUG else None,
+    openapi_url="/openapi.json" if settings.DEBUG else None,
 )
 
 def get_media_url(request, field):
@@ -121,9 +126,16 @@ def track_batch_click(request, batch_id: int):
     AdmissionBatch.objects.filter(id=batch_id).update(click_count=F('click_count') + 1)
     return {"success": True, "message": "點擊已記錄"}
 
-@api.post("/admin/batches/sync", response=ApiResponse, tags=["Admin 管理操作"], auth=django_auth)
+def _is_staff_user(request):
+    """僅允許已登入且具後台管理權限 (is_staff) 的帳號"""
+    user = getattr(request, "user", None)
+    return bool(user and user.is_authenticated and user.is_staff)
+
+@api.post("/admin/batches/sync", response={200: ApiResponse, 403: ApiResponse}, tags=["Admin 管理操作"], auth=django_auth)
 def trigger_batches_sync(request):
     """手動觸發台灣就業通期別同步（需登入後台管理員權限，配置 60s 防抖鎖防範 DoS 競爭）"""
+    if not _is_staff_user(request):
+        return 403, {"success": False, "message": "未授權：需要後台管理員權限"}
     lock_key = "lock:batch_sync_trigger"
     if not cache.add(lock_key, True, timeout=60):
         return {"success": False, "message": "背景同步作業已在進行中或冷卻中，請稍候再試。"}
@@ -136,19 +148,28 @@ def trigger_batches_sync(request):
     finally:
         cache.delete(lock_key)
 
-def handle_cron_sync(request, token: Optional[str] = None):
-    """
-    供外部定時排程 (如 GitHub Actions) 觸發的自動同步處理函式。
-    支援 Header 'X-Cron-Token'、'Authorization: Bearer <token>' 或 Query Parameter '?token='。
-    """
-    expected_token = os.getenv("CRON_SECRET_TOKEN", "wdaweb-cron-sync-token-2026")
-    header_token = request.headers.get("x-cron-token") or request.headers.get("X-Cron-Token")
-    auth_header = request.headers.get("authorization", "") or request.headers.get("Authorization", "")
-    bearer_token = auth_header.replace("Bearer ", "").strip() if auth_header.startswith("Bearer ") else ""
+def _extract_cron_token(request) -> str:
+    """僅接受請求標頭中的密鑰（X-Cron-Token 或 Authorization: Bearer），不接受網址參數以免密鑰留在存取紀錄"""
+    header_token = (request.headers.get("X-Cron-Token") or "").strip()
+    if header_token:
+        return header_token
+    auth_header = request.headers.get("Authorization", "")
+    if auth_header.startswith("Bearer "):
+        return auth_header[len("Bearer "):].strip()
+    return ""
 
-    provided_token = token or header_token or bearer_token
+@api.post("/cron/batches/sync", response={200: ApiResponse, 403: ApiResponse}, tags=["Cron 自動排程"])
+def cron_batches_sync_post(request):
+    """
+    供外部定時排程 (如 GitHub Actions) 透過 POST 觸發台灣就業通同步。
+    密鑰必須由環境變數 CRON_SECRET_TOKEN 提供；未設定時一律拒絕（不提供任何預設值）。
+    """
+    expected_token = os.getenv("CRON_SECRET_TOKEN", "").strip()
+    provided_token = _extract_cron_token(request)
 
-    if not provided_token or provided_token != expected_token:
+    if not expected_token or not provided_token or not hmac.compare_digest(
+        provided_token.encode("utf-8"), expected_token.encode("utf-8")
+    ):
         return 403, {"success": False, "message": "未授權：無效的排程密鑰 (Invalid Cron Token)"}
 
     lock_key = "lock:batch_sync_trigger"
@@ -160,20 +181,12 @@ def handle_cron_sync(request, token: Optional[str] = None):
         if res["success"]:
             return {"success": True, "message": f"同步成功！新增 {res['created']} 筆，更新 {res['updated']} 筆。"}
         return {"success": False, "message": f"同步失敗: {', '.join(res['errors'])}"}
-    except Exception as e:
-        return {"success": False, "message": f"同步過程發生異常: {str(e)}"}
+    except Exception:
+        import logging
+        logging.getLogger(__name__).exception("[Cron] 期別同步過程發生異常")
+        return {"success": False, "message": "同步過程發生異常，請查看伺服器日誌。"}
     finally:
         cache.delete(lock_key)
-
-@api.get("/cron/batches/sync", response={200: ApiResponse, 403: ApiResponse}, tags=["Cron 自動排程"])
-def cron_batches_sync_get(request, token: Optional[str] = None):
-    """供外部定時排程 (如 GitHub Actions) 透過 GET 觸發台灣就業通同步"""
-    return handle_cron_sync(request, token)
-
-@api.post("/cron/batches/sync", response={200: ApiResponse, 403: ApiResponse}, tags=["Cron 自動排程"])
-def cron_batches_sync_post(request, token: Optional[str] = None):
-    """供外部定時排程 (如 GitHub Actions) 透過 POST 觸發台灣就業通同步"""
-    return handle_cron_sync(request, token)
 
 @api.get("/public/curriculum/modules", response=List[CurriculumModuleOut], tags=["Public 前台公開"])
 def get_curriculum_modules(request):

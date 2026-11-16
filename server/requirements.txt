@@ -1,12 +1,12 @@
 annotated-types==0.8.0
 asgiref==3.12.1
 dj-database-url==3.1.2
-Django==6.1
+Django==6.1.1
 django-cors-headers==4.9.0
 django-ninja==1.7.0
 django-unfold==0.104.1
 gunicorn==26.2.0
-pillow==12.3.0
+pillow==13.0.0
 pydantic==2.13.5
 pydantic_core==2.46.5
 sqlparse==0.6.0
@@ -14,5 +14,5 @@ typing-inspection==0.4.4
 typing_extensions==4.16.0
 tzdata==2026.3
 whitenoise==6.12.0
-cloudinary>=1.41.0
-django-cloudinary-storage>=0.3.0
+cloudinary==1.47.0
+django-cloudinary-storage==0.3.0

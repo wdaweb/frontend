@@ -42,8 +42,8 @@ describe('🚀 系統生命徵象冒煙測試 (Smoke & Sanity)', () => {
       })
     })
 
-    it('嚴格遵循業務不變量：本專案期別永遠剛好為 2 期', () => {
-      expect(defaultBatches.length).toBe(2)
+    it('離線快照至少包含 1 個期別（台灣就業通開出新期別時，爬蟲會自動新增，不限定期數）', () => {
+      expect(defaultBatches.length).toBeGreaterThanOrEqual(1)
     })
   })
 
@@ -51,7 +51,7 @@ describe('🚀 系統生命徵象冒煙測試 (Smoke & Sanity)', () => {
     it('8 大核心模組之預設快照資料必須完整且格式合規', () => {
       expect(defaultSettings.site_title).toBeTruthy()
       expect(defaultCarousels.length).toBeGreaterThan(0)
-      expect(defaultBatches.length).toBe(2)
+      expect(defaultBatches.length).toBeGreaterThanOrEqual(1)
       expect(defaultModules.length).toBe(7) // 7 大課程模組
       expect(defaultTechCards.length).toBeGreaterThan(0)
       expect(defaultFacilities.length).toBeGreaterThan(0)

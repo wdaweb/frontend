@@ -3,9 +3,16 @@ import vue from '@vitejs/plugin-vue'
 import tailwindcss from '@tailwindcss/vite'
 import path from 'path'
 
+// 部署路徑：由 CI 依 GitHub Pages 實際路徑注入（例：/frontend/），本地開發與預覽為 /
+// 一般網址路由需要絕對路徑，子頁（如 /frontend/admission/）才能正確載入資源
+function resolveBasePath(): string {
+  const raw = (process.env.VITE_BASE_PATH || '/').trim()
+  const withLeading = raw.startsWith('/') ? raw : `/${raw}`
+  return withLeading.endsWith('/') ? withLeading : `${withLeading}/`
+}
+
 export default defineConfig({
-  // 使用相對路徑 './'，可無痛適應任何 GitHub Repository 名稱
-  base: './',
+  base: resolveBasePath(),
   plugins: [
     vue(),
     tailwindcss(),

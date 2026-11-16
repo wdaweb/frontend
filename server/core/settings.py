@@ -3,6 +3,7 @@ from pathlib import Path
 from django.urls import reverse_lazy
 from django.templatetags.static import static
 import dj_database_url
+from django.core.exceptions import ImproperlyConfigured
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -15,15 +16,34 @@ for _env_path in [BASE_DIR / '.env', BASE_DIR.parent / '.env']:
                     _line = _line.strip()
                     if _line and not _line.startswith('#') and '=' in _line:
                         _k, _v = _line.split('=', 1)
-                        os.environ[_k.strip()] = _v.strip()
+                        # 系統環境變數優先，.env 僅補上尚未設定的項目
+                        os.environ.setdefault(_k.strip(), _v.strip())
         except Exception:
             pass
 
-SECRET_KEY = os.getenv('SECRET_KEY', 'django-insecure-wdaweb-taishan-frontend-ai-key-2026')
+def _env_list(name: str) -> list[str]:
+    return [v.strip() for v in os.getenv(name, '').split(',') if v.strip()]
 
-DEBUG = os.getenv('DEBUG', 'True') == 'True'
+# 安全預設：未明確設定 DEBUG=True 時一律視為正式環境（本地開發請於 server/.env 加上 DEBUG=True）
+DEBUG = os.getenv('DEBUG', 'False') == 'True'
 
-ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', '*').split(',')
+SECRET_KEY = os.getenv('SECRET_KEY', '')
+if not SECRET_KEY:
+    if DEBUG:
+        # 僅限本地開發使用的固定金鑰，正式環境必須由環境變數提供
+        SECRET_KEY = 'django-insecure-local-dev-only-key'
+    else:
+        raise ImproperlyConfigured('正式環境必須設定 SECRET_KEY 環境變數')
+
+# 允許的主機：環境變數 ALLOWED_HOSTS（逗號分隔）＋ Render 自動提供的對外主機名稱
+RENDER_EXTERNAL_HOSTNAME = os.getenv('RENDER_EXTERNAL_HOSTNAME', '').strip()
+ALLOWED_HOSTS = [h for h in _env_list('ALLOWED_HOSTS') if h != '*']
+if RENDER_EXTERNAL_HOSTNAME and RENDER_EXTERNAL_HOSTNAME not in ALLOWED_HOSTS:
+    ALLOWED_HOSTS.append(RENDER_EXTERNAL_HOSTNAME)
+if DEBUG:
+    ALLOWED_HOSTS += ['localhost', '127.0.0.1', '[::1]']
+elif not ALLOWED_HOSTS:
+    ALLOWED_HOSTS = ['wdaweb.onrender.com']
 
 INSTALLED_APPS = [
     'unfold',
@@ -81,6 +101,9 @@ if DATABASE_URL:
     DATABASES = {
         'default': dj_database_url.config(default=DATABASE_URL, conn_max_age=600)
     }
+elif not DEBUG and os.getenv('ALLOW_SQLITE_IN_PRODUCTION', 'False') != 'True':
+    # Render 的磁碟為暫存性質，正式環境靜默退回 SQLite 會在重啟後遺失全部資料
+    raise ImproperlyConfigured('正式環境必須設定 DATABASE_URL 環境變數（PostgreSQL）')
 else:
     DATABASES = {
         'default': {
@@ -189,21 +212,43 @@ else:
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # CORS & CSRF 配置 (支援 GitHub Pages 與 Render)
-CORS_ALLOW_ALL_ORIGINS = True
-CORS_ALLOW_CREDENTIALS = True
+# 僅允許正式前台網域呼叫 API；可用環境變數 CORS_ALLOWED_ORIGINS（逗號分隔）追加
+CORS_ALLOW_ALL_ORIGINS = False
+CORS_ALLOW_CREDENTIALS = False
+CORS_ALLOWED_ORIGINS = [
+    'https://wdaweb.github.io',
+    'https://powerkaifu.github.io',
+] + _env_list('CORS_ALLOWED_ORIGINS')
+if DEBUG:
+    CORS_ALLOWED_ORIGINS += [
+        'http://localhost:5173',
+        'http://127.0.0.1:5173',
+    ]
 
 # 反向代理與 HTTPS 安全配置 (Render 部署必備，防止 CSRF 與登入失效)
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 
-CSRF_TRUSTED_ORIGINS = [
-    'https://wdaweb.onrender.com',
-    'https://*.onrender.com',
-    'https://*.github.io',
-    'http://localhost:5173',
-    'http://127.0.0.1:5173',
-    'http://localhost:8000',
-    'http://127.0.0.1:8000',
-]
+# CSRF 信任來源僅列出實際使用的完整網域（不使用萬用字元）
+CSRF_TRUSTED_ORIGINS = ['https://wdaweb.onrender.com'] + _env_list('CSRF_TRUSTED_ORIGINS')
+if RENDER_EXTERNAL_HOSTNAME:
+    _render_origin = f'https://{RENDER_EXTERNAL_HOSTNAME}'
+    if _render_origin not in CSRF_TRUSTED_ORIGINS:
+        CSRF_TRUSTED_ORIGINS.append(_render_origin)
+if DEBUG:
+    CSRF_TRUSTED_ORIGINS += [
+        'http://localhost:5173',
+        'http://127.0.0.1:5173',
+        'http://localhost:8000',
+        'http://127.0.0.1:8000',
+    ]
+
+# 正式環境 HTTPS 強化（Render 邊緣已強制 HTTP 轉 HTTPS，故不另設 SECURE_SSL_REDIRECT 以免影響內部健康檢查）
+if not DEBUG:
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
+    SECURE_HSTS_SECONDS = 31536000
+    SECURE_CONTENT_TYPE_NOSNIFF = True
+    SILENCED_SYSTEM_CHECKS = ['security.W008']
 
 UNFOLD = {
     'SITE_TITLE': '泰山職訓－前端網頁技術與AI應用',

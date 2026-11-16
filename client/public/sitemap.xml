@@ -7,25 +7,25 @@
     <priority>1.0</priority>
   </url>
   <url>
-    <loc>https://wdaweb.github.io/frontend/admission</loc>
+    <loc>https://wdaweb.github.io/frontend/admission/</loc>
     <lastmod>2026-09-09</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
-    <loc>https://wdaweb.github.io/frontend/showcase</loc>
+    <loc>https://wdaweb.github.io/frontend/showcase/</loc>
     <lastmod>2026-09-09</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://wdaweb.github.io/frontend/faq</loc>
+    <loc>https://wdaweb.github.io/frontend/faq/</loc>
     <lastmod>2026-09-09</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://wdaweb.github.io/frontend/community</loc>
+    <loc>https://wdaweb.github.io/frontend/community/</loc>
     <lastmod>2026-09-09</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>

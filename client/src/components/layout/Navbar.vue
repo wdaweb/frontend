@@ -28,10 +28,7 @@
 				<!-- 方案 1 一體化運動光艙 (內部背光 + 頂部雷射光斑 100% 同步) -->
 				<!-- ========================================================================= -->
 				<div class="absolute inset-0 pointer-events-none overflow-hidden">
-					<div
-						class="absolute inset-y-0 w-80 sm:w-96 pointer-events-none"
-						:class="`glow-laser-${activeGlowPreset}`"
-					>
+					<div class="absolute inset-y-0 w-80 sm:w-96 pointer-events-none" :class="`glow-laser-${activeGlowPreset}`">
 						<!-- 1. 內部漫射背光穿透氣團 (z-0) -->
 						<div
 							class="absolute inset-0 bg-gradient-to-r from-transparent via-cyan-500/15 via-blue-500/10 to-transparent blur-xl pointer-events-none"
@@ -64,7 +61,9 @@
 									{{ store.settings?.site_title || '泰山職訓－前端網頁技術與AI應用' }}
 								</span>
 							</div>
-							<div class="flex items-center flex-wrap gap-x-1.5 gap-y-0.5 text-xs sm:text-sm text-slate-400 font-medium leading-tight mt-0.5 sm:mt-1">
+							<div
+								class="flex items-center flex-wrap gap-x-1.5 gap-y-0.5 text-xs sm:text-sm text-slate-400 font-medium leading-tight mt-0.5 sm:mt-1"
+							>
 								<span class="hidden 2xl:inline shrink-0">泰山職業訓練場 ｜</span>
 								<span class="inline-flex items-center gap-1 text-amber-300 font-bold min-w-0">
 									<svg
@@ -91,9 +90,7 @@
 				</div>
 
 				<!-- Center: Nav Items with Magnetic Pill (水平正中間絕對置中，維持大字階梯 text-sm xl:text-base font-bold) -->
-				<div
-					class="hidden lg:flex items-center justify-center flex-shrink-0 relative z-10 px-1 xl:px-3"
-				>
+				<div class="hidden lg:flex items-center justify-center flex-shrink-0 relative z-10 px-1 xl:px-3">
 					<div
 						class="flex items-center space-x-1 xl:space-x-1.5 p-1.5 px-2.5 xl:px-3 rounded-2xl bg-slate-950/60 border border-slate-800/80 backdrop-blur-md"
 					>
@@ -212,7 +209,9 @@
 										{{ store.settings?.site_title || '泰山職訓－前端網頁技術與AI應用' }}
 									</span>
 								</div>
-								<div class="flex items-center flex-wrap gap-x-1.5 gap-y-0.5 text-xs sm:text-sm text-slate-400 font-medium leading-tight mt-0.5 sm:mt-1">
+								<div
+									class="flex items-center flex-wrap gap-x-1.5 gap-y-0.5 text-xs sm:text-sm text-slate-400 font-medium leading-tight mt-0.5 sm:mt-1"
+								>
 									<span class="hidden 2xl:inline shrink-0">泰山職業訓練場 ｜</span>
 									<span class="inline-flex items-center gap-1 text-amber-300 font-bold min-w-0">
 										<svg
@@ -239,9 +238,7 @@
 					</div>
 
 					<!-- Center: Nav Items with Magnetic Pill (水平正中間置中) -->
-					<div
-						class="hidden lg:flex items-center justify-center flex-shrink-0 relative z-10 px-1 xl:px-3"
-					>
+					<div class="hidden lg:flex items-center justify-center flex-shrink-0 relative z-10 px-1 xl:px-3">
 						<div
 							class="flex items-center space-x-1 xl:space-x-1.5 p-1.5 px-2.5 xl:px-3 rounded-2xl bg-slate-950/50 border border-slate-800/80 backdrop-blur-md"
 						>
@@ -362,7 +359,7 @@
 </template>
 
 <script setup lang="ts">
-import defaultLogo from '@/assets/logo.png'
+import defaultLogo from '@/assets/logo.webp'
 import { useCmsStore } from '@/stores/useCmsStore'
 import { useThemeStore } from '@/stores/useThemeStore'
 import { getNavbarAdmissionBadge } from '@/utils/batchStatus'
@@ -379,7 +376,6 @@ const isScrolled = ref(false)
 const isOpen = ref(false)
 const scrollDirection = ref<'up' | 'down'>('up')
 let lastScrollY = 0
-
 
 // 雙重防禦：當遠端 Logo 網址 404 或載入失敗時，立即無縫降級回傳本地官方高畫質 Logo
 function handleLogoError(e: Event) {
@@ -404,7 +400,8 @@ const navbarContainerClasses = computed(() => {
 })
 
 function handleScroll() {
-	const scrollY = window.scrollY || window.pageYOffset || document.documentElement.scrollTop || document.body.scrollTop || 0
+	const scrollY =
+		window.scrollY || window.pageYOffset || document.documentElement.scrollTop || document.body.scrollTop || 0
 
 	// 滾動方向感應 (Scroll Direction Detection)
 	if (scrollY > lastScrollY && scrollY > 60) {

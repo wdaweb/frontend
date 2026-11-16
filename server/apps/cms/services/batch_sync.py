@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import json
 import logging
+import os
 import urllib.request
 import urllib.parse
 import http.cookiejar
@@ -41,9 +42,13 @@ def roc_to_ad_date(roc_str):
 
 def get_session_and_token():
     """建立 Session 並取得台灣就業通首頁之 __RequestVerificationToken"""
+    # 預設完整驗證 TLS 憑證，防止中間人竄改期別資料。
+    # 若官方站台憑證鏈異常導致無法連線，可暫時設定環境變數 TAIWANJOBS_SKIP_TLS_VERIFY=True 作為應急。
     ctx = ssl.create_default_context()
-    ctx.check_hostname = False
-    ctx.verify_mode = ssl.CERT_NONE
+    if os.getenv("TAIWANJOBS_SKIP_TLS_VERIFY", "False") == "True":
+        logger.warning("[TaiwanJobs] ⚠️ 已依環境變數關閉 TLS 憑證驗證，請儘速恢復")
+        ctx.check_hostname = False
+        ctx.verify_mode = ssl.CERT_NONE
     
     cj = http.cookiejar.CookieJar()
     opener = urllib.request.build_opener(
@@ -180,11 +185,10 @@ def sync_admission_batches():
         detail = parse_taiwanjobs_detail_page(opener, cid)
         if detail and detail.get('enroll_start_date'):
             try:
-                # 依現有總期別數動態判定排序與名稱
-                existing_count = AdmissionBatch.objects.filter(deleted_at__isnull=True).count()
                 batch_name = detail.get('name') or f"前端網頁技術與AI應用 (代碼 {cid})"
-                
-                defaults = {
+
+                # 官方資料欄位（每次同步都以台灣就業通為準）
+                synced_fields = {
                     "batch_name": batch_name,
                     "total_hours": detail.get('total_hours', 920),
                     "enroll_start_date": detail.get('enroll_start_date'),
@@ -195,14 +199,31 @@ def sync_admission_batches():
                     "planned_trainees": detail.get('planned_trainees', 24),
                     "applicants_count": detail.get('applicants_count', 0),
                     "apply_url": detail.get('apply_url', f"https://its.taiwanjobs.gov.tw/Course/Detail?ID={cid}"),
-                    "sort_order": existing_count + 1,
                     "last_synced_at": now,
                 }
 
-                obj, created = AdmissionBatch.objects.update_or_create(
-                    course_code=str(cid),
-                    defaults=defaults
-                )
+                # 查詢時包含已軟刪除的資料：管理員在後台刪除的期別不會被同步重新建立
+                obj = AdmissionBatch.all_objects.filter(course_code=str(cid)).order_by('id').first()
+
+                if obj is not None and obj.deleted_at is not None:
+                    logger.info(f"[TaiwanJobs] ⏭️ 期別 {cid} 已於後台刪除，略過同步")
+                    results["skipped_deleted"] = results.get("skipped_deleted", 0) + 1
+                    continue
+
+                if obj is None:
+                    # 新期別：排序接在現有期別之後；之後的同步不再更動排序，保留後台手動調整
+                    existing_count = AdmissionBatch.objects.count()
+                    obj = AdmissionBatch.objects.create(
+                        course_code=str(cid),
+                        sort_order=existing_count + 1,
+                        **synced_fields,
+                    )
+                    created = True
+                else:
+                    for field, value in synced_fields.items():
+                        setattr(obj, field, value)
+                    obj.save(update_fields=[*synced_fields.keys(), "updated_at"])
+                    created = False
 
                 if created:
                     results["created"] += 1
@@ -232,6 +253,7 @@ def sync_admission_batches():
         results["success"] = True
         results["message"] = msg
     else:
-        results["success"] = (results["created"] + results["updated"]) > 0
+        # 全部都是後台已刪除而略過的期別，也視為正常完成
+        results["success"] = (results["created"] + results["updated"] + results.get("skipped_deleted", 0)) > 0
 
     return results

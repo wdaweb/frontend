@@ -15,21 +15,31 @@ from datetime import date
 
 print("=== 開始植入種子資料 ===")
 
-# 1. 建立或重設超級管理員帳號與密碼 (確保密碼 100% 絕對對齊)
+# 1. 超級管理員帳號（密碼只能由環境變數提供，程式碼內不保留任何預設密碼）
+#    - 帳號不存在：以 DJANGO_SUPERUSER_PASSWORD 建立
+#    - 帳號已存在：預設不更動密碼，後台自行修改的密碼不會被部署覆蓋
+#    - 需要強制重設時：額外設定 DJANGO_SUPERUSER_RESET_PASSWORD=True 部署一次，完成後請移除
 admin_user = os.getenv("DJANGO_SUPERUSER_USERNAME", "admin")
 admin_email = os.getenv("DJANGO_SUPERUSER_EMAIL", "admin@wdaweb.gov.tw")
-admin_pass = os.getenv("DJANGO_SUPERUSER_PASSWORD", "huhu0126")
+admin_pass = os.getenv("DJANGO_SUPERUSER_PASSWORD", "")
+force_reset = os.getenv("DJANGO_SUPERUSER_RESET_PASSWORD", "False") == "True"
 
-user, created = User.objects.get_or_create(username=admin_user, defaults={"email": admin_email})
-user.set_password(admin_pass)
-user.is_staff = True
-user.is_superuser = True
-user.is_active = True
-user.save()
-if created:
-    print(f"[OK] 管理員帳號建立成功：{admin_user}")
+existing_admin = User.objects.filter(username=admin_user).first()
+if existing_admin is None:
+    if admin_pass:
+        User.objects.create_superuser(username=admin_user, email=admin_email, password=admin_pass)
+        print(f"[OK] 管理員帳號建立成功：{admin_user}")
+    else:
+        print("[SKIP] 未設定 DJANGO_SUPERUSER_PASSWORD，略過建立管理員帳號（可改用 python manage.py createsuperuser）")
+elif force_reset and admin_pass:
+    existing_admin.set_password(admin_pass)
+    existing_admin.is_staff = True
+    existing_admin.is_superuser = True
+    existing_admin.is_active = True
+    existing_admin.save()
+    print(f"[OK] 已依 DJANGO_SUPERUSER_RESET_PASSWORD 重設管理員密碼：{admin_user}（完成後請移除該環境變數）")
 else:
-    print(f"[OK] 管理員帳號密碼已強制重設對齊：{admin_user}")
+    print(f"[OK] 管理員帳號已存在，密碼維持不變：{admin_user}")
 
 # 2. 全域站台設定 (確保 GA4 評估 ID 與全站預設對齊)
 setting, _ = SiteSetting.objects.get_or_create(
