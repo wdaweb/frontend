@@ -125,6 +125,37 @@
       />
 
       <div class="space-y-4 text-base text-slate-300 mb-8">
+        <!-- 台灣就業通課程代碼 (支援一鍵複製) -->
+        <div
+          v-if="batch.course_code"
+          class="flex flex-col sm:flex-row sm:items-center justify-between pb-3.5 border-b border-slate-800/80 gap-1.5 sm:gap-0"
+        >
+          <span class="text-slate-400 flex items-center space-x-1.5 text-base">
+            <span>🏷️ 台灣就業通課程代碼</span>
+          </span>
+          <div class="text-left sm:text-right flex items-center gap-2">
+            <span
+              class="font-bold font-mono text-base tracking-wide"
+              :class="isBatchClosed(batch) ? 'text-slate-300' : 'text-cyan-300'"
+            >
+              {{ batch.course_code }}
+            </span>
+            <button
+              type="button"
+              @click="copyCourseCode(batch.course_code)"
+              :aria-label="`複製 ${batch.batch_name} 課程代碼 ${batch.course_code}`"
+              class="px-2.5 py-1 rounded-lg text-xs font-semibold transition-all cursor-pointer border focus-visible:ring-2 focus-visible:ring-cyan-400 focus:outline-none"
+              :class="
+                copied
+                  ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40'
+                  : 'bg-slate-800/80 hover:bg-slate-700/80 text-slate-300 hover:text-white border-slate-700/70'
+              "
+            >
+              {{ copied ? '✓ 已複製' : '複製代碼' }}
+            </button>
+          </div>
+        </div>
+
         <!-- 報名期間 (手機版直式/橫式自適應) -->
         <div
           class="flex flex-col sm:flex-row sm:items-center justify-between pb-3.5 border-b border-slate-800/80 gap-1 sm:gap-0"
@@ -284,7 +315,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 import type { AdmissionBatch } from '@/types'
 import {
   isBatchClosed,
@@ -321,4 +352,23 @@ defineEmits<{
 }>()
 
 const applicantsSummary = computed(() => props.getApplicantsSummary(props.batch))
+
+const copied = ref(false)
+let copyTimer: ReturnType<typeof setTimeout> | null = null
+
+async function copyCourseCode(code?: string) {
+  if (!code) return
+  try {
+    if (typeof navigator !== 'undefined' && navigator.clipboard) {
+      await navigator.clipboard.writeText(code)
+    }
+    copied.value = true
+    if (copyTimer) clearTimeout(copyTimer)
+    copyTimer = setTimeout(() => {
+      copied.value = false
+    }, 2000)
+  } catch {
+    // 瀏覽器不支援或權限受限時靜默略過
+  }
+}
 </script>

@@ -160,6 +160,29 @@ export function useBatchTimeline(batchesInput: MaybeRefOrGetter<AdmissionBatch[]
     if (isCelebrationSimulated.value && batch.id === 1) {
       return 'completed'
     }
+    const override = batch.status_override
+    if (override && override !== 'auto') {
+      if (override === 'upcoming') return 'pending'
+      if (override === 'open' || override === 'closing_soon' || override === 'full') {
+        return stepNumber === 1 ? 'active' : 'pending'
+      }
+      if (override === 'screening') {
+        if (stepNumber < 2) return 'completed'
+        return stepNumber === 2 ? 'active' : 'pending'
+      }
+      if (override === 'preparing') {
+        if (stepNumber < 3) return 'completed'
+        return stepNumber === 3 ? 'active' : 'pending'
+      }
+      if (override === 'training') {
+        if (stepNumber < 4) return 'completed'
+        return stepNumber === 4 ? 'active' : 'pending'
+      }
+      if (override === 'ended') {
+        return 'completed'
+      }
+    }
+
     const now = Date.now()
     const enrollEnd = batch.enroll_end_date ? new Date(batch.enroll_end_date.replace(/-/g, '/')).getTime() + 24 * 60 * 60 * 1000 - 1000 : 0
     const screeningEndTime = getScreeningEndTime(batch.screening_date)

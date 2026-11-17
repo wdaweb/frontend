@@ -82,15 +82,21 @@
 					</div>
 					<div class="text-left">
 						<div class="flex items-center space-x-2">
-							<span class="font-bold text-white text-base sm:text-lg">錯過本期報名？</span>
+							<span class="font-bold text-white text-base sm:text-lg">
+								{{ hasEnrollingBatch ? '對報名資格、甄試準備或生活津貼有疑問？' : '錯過本期報名？' }}
+							</span>
 							<span
 								v-if="!hasEnrollingBatch"
 								class="px-2 py-0.5 rounded-full text-xs font-semibold bg-cyan-500/20 text-cyan-300 border border-cyan-500/40"
 								>下一梯次籌備中</span
 							>
 						</div>
-						<p class="mt-0.5 text-xs sm:text-sm text-slate-300 leading-relaxed">
-							新梯次正密集籌備中，歡迎預先加入 Discord 或致電諮詢，鎖定第一手簡訊通知！
+						<p class="mt-0.5 text-sm sm:text-base text-slate-300 leading-relaxed">
+							{{
+								hasEnrollingBatch
+									? '歡迎加入官方 Discord 社群或致電泰山職訓場，由專人為您解答參訓細節！'
+									: '新梯次正密集籌備中，歡迎預先加入 Discord 或致電諮詢，鎖定第一手簡訊通知！'
+							}}
 						</p>
 					</div>
 				</div>

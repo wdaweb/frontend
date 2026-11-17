@@ -49,11 +49,17 @@ describe('🚀 系統生命徵象冒煙測試 (Smoke & Sanity)', () => {
 
     it('固定欄序不變量：第 1 期永遠排在左邊，第 2 期永遠排在右邊', () => {
       const reversed = [...defaultBatches].reverse()
-      const { sortedBatches } = useBatchTimeline(() => reversed)
+      const { sortedBatches, getStepStatus } = useBatchTimeline(() => reversed)
       expect(sortedBatches.value.length).toBe(2)
       expect(sortedBatches.value[0]?.course_code).toBe('167125')
       expect(sortedBatches.value[0]?.batch_name).toBe('前端網頁技術與AI應用（第 1 期）')
       expect(sortedBatches.value[1]?.course_code).toBe('159269')
+
+      // 當後台手動覆寫 status_override 時，5 階段節點應與狀態同步
+      const baseBatch = sortedBatches.value[0]!
+      expect(getStepStatus({ ...baseBatch, status_override: 'training' }, 3)).toBe('completed')
+      expect(getStepStatus({ ...baseBatch, status_override: 'training' }, 4)).toBe('active')
+      expect(getStepStatus({ ...baseBatch, status_override: 'ended' }, 5)).toBe('completed')
     })
   })
 

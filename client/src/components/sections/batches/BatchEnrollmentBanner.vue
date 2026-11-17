@@ -5,9 +5,15 @@
       class="relative rounded-2xl p-4 sm:px-6 sm:py-4 border backdrop-blur-xl transition-all duration-300 overflow-hidden shadow-xl"
       :class="
         notice.isOpen
-          ? 'bg-emerald-950/40 border-emerald-500/40 shadow-emerald-950/50'
+          ? 'bg-emerald-950/40 border-emerald-500/40 hover:border-emerald-400/70 shadow-emerald-950/50 cursor-pointer'
           : 'bg-slate-900/85 border-amber-500/30 shadow-slate-950/60'
       "
+      :role="notice.isOpen ? 'button' : undefined"
+      :tabindex="notice.isOpen ? 0 : undefined"
+      :aria-label="notice.isOpen ? '捲動至下方招生期別卡片進行報名' : undefined"
+      @click="scrollToCards"
+      @keydown.enter.prevent="scrollToCards"
+      @keydown.space.prevent="scrollToCards"
     >
       <!-- 頂部流光微線 -->
       <div
@@ -54,7 +60,15 @@
 <script setup lang="ts">
 import type { EnrollmentNotice } from '@/utils/batchStatus'
 
-defineProps<{
+const props = defineProps<{
   notice: EnrollmentNotice
 }>()
+
+function scrollToCards() {
+  if (!props.notice.isOpen || typeof document === 'undefined') return
+  const target = document.getElementById('batches-cards-grid')
+  if (target) {
+    target.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  }
+}
 </script>
