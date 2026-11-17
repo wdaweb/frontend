@@ -70,13 +70,19 @@ const router = createRouter({
 })
 
 // Google Analytics 4 (GA4) SPA 路由無縫換頁追蹤
+// page_path 帶上部署路徑（例：/frontend/admission），與同一 GA4 資源內其他網站（如 /backend/）區隔
 router.afterEach((to) => {
   try {
     if (typeof window !== 'undefined' && typeof (window as any).gtag === 'function') {
-      (window as any).gtag('event', 'page_view', {
+      // 路徑一律以斜線結尾，讓「站內點選」與「直接開啟」（GitHub Pages 會轉址到 /admission/）算成同一頁
+      const basePath = import.meta.env.BASE_URL.replace(/\/$/, '')
+      const normalizedPath = to.path.endsWith('/') ? to.path : `${to.path}/`
+      const queryString = to.fullPath.slice(to.path.length).split('#')[0]
+      const fullPath = `${basePath}${normalizedPath}${queryString}`
+      ;(window as any).gtag('event', 'page_view', {
         page_title: to.meta.title || document.title,
-        page_location: window.location.href,
-        page_path: to.fullPath
+        page_location: `${window.location.origin}${fullPath}`,
+        page_path: fullPath
       })
     }
   } catch (e) {
