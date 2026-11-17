@@ -58,7 +58,8 @@ import { useCmsStore } from '@/stores/useCmsStore'
 import GlobalDynamicBackground from '@/components/common/GlobalDynamicBackground.vue'
 import Navbar from '@/components/layout/Navbar.vue'
 import Footer from '@/components/layout/Footer.vue'
-import defaultFavicon from '@/assets/favicon.png'
+
+const defaultFavicon = `${import.meta.env.BASE_URL}favicon.png`
 
 const route = useRoute()
 const router = useRouter()

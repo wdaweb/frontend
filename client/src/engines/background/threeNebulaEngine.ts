@@ -7,7 +7,7 @@ if (typeof window !== 'undefined') {
   gsap.registerPlugin(ScrollTrigger)
 }
 
-export interface ThreeNebulaEngineOptions {
+interface ThreeNebulaEngineOptions {
   canvas: HTMLCanvasElement
   store: ReturnType<typeof useThemeStore>
   getIsMobile: () => boolean

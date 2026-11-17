@@ -3,7 +3,7 @@ import type { useThemeStore } from '@/stores/useThemeStore'
 // ===========================================================================
 // 🌠 Awwwards 級 360° 天球仰望偶發流星物理系統 (Celestial Sporadic Meteor Engine)
 // ===========================================================================
-export interface MeteorSpark {
+interface MeteorSpark {
   x: number
   y: number
   vx: number
@@ -14,7 +14,7 @@ export interface MeteorSpark {
   color: string
 }
 
-export interface MeteorAfterglowSegment {
+interface MeteorAfterglowSegment {
   x: number
   y: number
   width: number
@@ -23,7 +23,7 @@ export interface MeteorAfterglowSegment {
   color: string
 }
 
-export interface CelestialMeteor {
+interface CelestialMeteor {
   x: number
   y: number
   startX: number
@@ -54,7 +54,7 @@ export interface CelestialMeteor {
 // ===========================================================================
 // 👾 幽靈代碼流星彩蛋 (Cyber Matrix Code-Meteor)
 // ===========================================================================
-export interface CodeDust {
+interface CodeDust {
   x: number
   y: number
   vx: number
@@ -66,13 +66,13 @@ export interface CodeDust {
   size: number
 }
 
-export interface CodeSymbolItem {
+interface CodeSymbolItem {
   text: string
   color: string
   category: 'frontend' | 'backend' | 'database' | 'ai' | 'milestone'
 }
 
-export const CODE_SYMBOLS: CodeSymbolItem[] = [
+const CODE_SYMBOLS: CodeSymbolItem[] = [
   // 💻 前端網頁技術 (Frontend)
   { text: '<Vue/>', color: '#4ade80', category: 'frontend' },
   { text: 'JavaScript', color: '#facc15', category: 'frontend' },
@@ -107,7 +107,7 @@ export const CODE_SYMBOLS: CodeSymbolItem[] = [
 // ===========================================================================
 // 🧠 宇宙深空量子思維漣漪 (Quantum Mind Waves) - 純光環擴散，無任何直線連線
 // ===========================================================================
-export interface NeuralFlashWave {
+interface NeuralFlashWave {
   x: number
   y: number
   radius: number
@@ -119,7 +119,7 @@ export interface NeuralFlashWave {
   hasSecondaryRing: boolean
 }
 
-export const METEOR_PALETTES = [
+const METEOR_PALETTES = [
   {
     name: 'cyan_plasma',
     core: '#ffffff',
@@ -168,7 +168,7 @@ function fastRemove<T>(arr: T[], index: number): void {
   }
 }
 
-export interface MeteorCanvasSystemOptions {
+interface MeteorCanvasSystemOptions {
   canvas: HTMLCanvasElement
   store: ReturnType<typeof useThemeStore>
   getIsMobile: () => boolean

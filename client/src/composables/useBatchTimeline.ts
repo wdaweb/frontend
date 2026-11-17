@@ -17,19 +17,19 @@ export const isCelebrationSimulated = ref(
    window.location.hash.includes('preview=celebration'))
 )
 
-export interface LifecycleStep {
+interface LifecycleStep {
   key: string
   label: string
 }
 
-export interface TrainingProgress {
+interface TrainingProgress {
   elapsedDays: number
   totalDays: number
   percent: number
   remainingDays: number
 }
 
-export interface ApplicantsSummary {
+interface ApplicantsSummary {
   label: string
   countText: string
   detailText: string
@@ -37,7 +37,7 @@ export interface ApplicantsSummary {
   percent: number
 }
 
-export interface DetailNotice {
+interface DetailNotice {
   icon: string
   text: string
 }

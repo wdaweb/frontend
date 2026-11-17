@@ -8,7 +8,7 @@ from datetime import datetime
 from django.core.management.base import BaseCommand
 from django.core.management import call_command
 from django.conf import settings
-from apps.cms.models import StudentProject
+from apps.cms.models import AdmissionBatch, StudentProject
 
 class Command(BaseCommand):
     help = "一鍵同步本地 CMS 資料至線上部署環境（備份資料庫、同步縮圖、更新前端快照、喚醒 Render、打包驗證）"
@@ -100,6 +100,41 @@ class Command(BaseCommand):
         if replaced != 1:
             self.stdout.write(self.style.ERROR("   ✗ 在 cmsDefaultSnapshots.ts 中找不到 defaultProjects 區塊，快照未更新"))
             sys.exit(1)
+
+        # 同步更新非隱藏之招生期別至 defaultBatches
+        batches = list(AdmissionBatch.objects.exclude(status_override='hidden').order_by('sort_order', 'enroll_start_date'))
+        if batches:
+            batch_lines = ['export const defaultBatches: AdmissionBatch[] = [']
+            for b in batches:
+                screening_str = json.dumps(str(b.screening_date)) if b.screening_date else 'null'
+                batch_lines.extend([
+                    '\t{',
+                    f'\t\tid: {b.id},',
+                    f'\t\tbatch_name: {json.dumps(b.batch_name, ensure_ascii=False)},',
+                    f'\t\ttotal_hours: {b.total_hours},',
+                    f'\t\tenroll_start_date: {json.dumps(str(b.enroll_start_date))},',
+                    f'\t\tenroll_end_date: {json.dumps(str(b.enroll_end_date))},',
+                    f'\t\tscreening_date: {screening_str},',
+                    f'\t\ttraining_start_date: {json.dumps(str(b.training_start_date))},',
+                    f'\t\ttraining_end_date: {json.dumps(str(b.training_end_date))},',
+                    f'\t\tplanned_trainees: {b.planned_trainees},',
+                    f'\t\tapplicants_count: {b.applicants_count},',
+                    f'\t\tapply_url: {json.dumps(b.apply_url, ensure_ascii=False)},',
+                    f'\t\tcourse_code: {json.dumps(b.course_code, ensure_ascii=False)},',
+                    f'\t\tdynamic_status: {json.dumps(b.dynamic_status)},',
+                    f'\t\tstatus_override: {json.dumps(b.status_override)},',
+                    f'\t\tclick_count: {b.click_count},',
+                    f'\t\tsort_order: {b.sort_order},',
+                    '\t},',
+                ])
+            batch_lines.append(']')
+            batch_ts = '\n'.join(batch_lines)
+            content, _ = re.subn(
+                r'export const defaultBatches: AdmissionBatch\[\] = \[[\s\S]*?\n\]',
+                lambda _m: batch_ts,
+                content,
+                count=1,
+            )
 
         with open(snapshot_file, 'w', encoding='utf-8', newline='') as f:
             f.write(content.replace('\n', newline))

@@ -24,7 +24,7 @@ export interface MeteorConfig {
   manualTriggerCodeCount: number
 }
 
-export interface SynapticConfig {
+interface SynapticConfig {
   enabled: boolean
   interactiveCursor: boolean
   autonomousPulse: boolean

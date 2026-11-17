@@ -1,6 +1,6 @@
 import { watchEffect, onUnmounted } from 'vue'
 
-export interface SeoMetaOptions {
+interface SeoMetaOptions {
   title: string
   description?: string
   canonicalPath?: string

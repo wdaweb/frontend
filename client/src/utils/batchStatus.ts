@@ -249,7 +249,7 @@ export function getBatchEnrollmentNotice(batches: AdmissionBatch[]): EnrollmentN
   }
 }
 
-export interface NavbarAdmissionBadge {
+interface NavbarAdmissionBadge {
   text: string
   fullText: string
   class: string

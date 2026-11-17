@@ -43,10 +43,10 @@ export default defineConfig({
           if (id.includes('node_modules/three')) {
             return 'vendor-three'
           }
-          if (id.includes('node_modules/vue') || id.includes('node_modules/pinia') || id.includes('node_modules/vue-router') || id.includes('node_modules/@vueuse')) {
+          if (id.includes('node_modules/vue') || id.includes('node_modules/pinia') || id.includes('node_modules/vue-router')) {
             return 'vendor-vue'
           }
-          if (id.includes('node_modules/gsap') || id.includes('node_modules/canvas-confetti')) {
+          if (id.includes('node_modules/gsap')) {
             return 'vendor-animation'
           }
         }
