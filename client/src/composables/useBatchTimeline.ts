@@ -226,7 +226,7 @@ export function useBatchTimeline(batchesInput: MaybeRefOrGetter<AdmissionBatch[]
       return {
         label: '🏆 招訓與參訓成果',
         countText: `圓滿結訓 ${planned} 名`,
-        detailText: `累計報名 ${count} 人甄試 (超額 ${Math.round((count / planned) * 100)}%)`,
+        detailText: `累計報名 ${count} 人甄試 · 超額 ${Math.round((count / planned) * 100)}%`,
         barClass: 'bg-slate-700',
         percent: 100
       }
@@ -236,7 +236,7 @@ export function useBatchTimeline(batchesInput: MaybeRefOrGetter<AdmissionBatch[]
       return {
         label: '👥 正式參訓學員陣容',
         countText: `正取參訓 ${planned} 名`,
-        detailText: `累計報名 ${count} 人甄試 (超額選拔)`,
+        detailText: `累計報名 ${count} 人甄試 · 超額選拔`,
         barClass: 'bg-gradient-to-r from-cyan-500 to-emerald-400 shadow-[0_0_8px_rgba(6,182,212,0.5)]',
         percent: 100
       }
@@ -247,7 +247,7 @@ export function useBatchTimeline(batchesInput: MaybeRefOrGetter<AdmissionBatch[]
       return {
         label: '🔥 即時報名熱度',
         countText: `已報名 ${count} 人`,
-        detailText: `招訓 ${planned} 名 (${pct >= 100 ? '已額滿甄試' : '席次迅速遞減中'})`,
+        detailText: `招訓 ${planned} 名 · ${count >= planned ? '報名踴躍，截止前皆可報名' : '把握機會線上報名'}`,
         barClass: 'bg-gradient-to-r from-cyan-500 to-emerald-400 shadow-[0_0_8px_rgba(6,182,212,0.5)]',
         percent: pct
       }

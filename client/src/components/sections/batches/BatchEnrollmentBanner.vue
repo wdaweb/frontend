@@ -1,6 +1,6 @@
 <template>
-  <!-- 即時報名狀態指示看板 (桌機採用 max-w-4xl 寬版配置，避免標題與說明於電腦版折行) -->
-  <div class="mt-5 max-w-4xl mx-auto w-full px-2 sm:px-0">
+  <!-- 即時報名狀態指示看板 (電腦版採 sm:w-fit 貼合內容寬度並確保說明單行不換行) -->
+  <div class="mt-5 mx-auto w-full sm:w-fit sm:max-w-4xl px-2 sm:px-0">
     <div
       class="relative rounded-2xl p-4 sm:px-6 sm:py-4 border backdrop-blur-xl transition-all duration-300 overflow-hidden shadow-xl"
       :class="
@@ -42,7 +42,7 @@
           >
             {{ notice.headline }}
           </div>
-          <p class="mt-1 text-sm sm:text-base text-slate-300 leading-relaxed">
+          <p class="mt-1 text-sm sm:text-base text-slate-300 leading-relaxed md:whitespace-nowrap">
             {{ notice.subline }}
           </p>
         </div>
