@@ -60,8 +60,14 @@ jobs:
           echo "伺服器回應: $HTTP_BODY"
           echo "--------------------------------------------------------"
 
-          if [ "$HTTP_CODE" -eq 200 ]; then
+          if [ "$HTTP_CODE" -eq 200 ] && echo "$HTTP_BODY" | grep -Eq '"success":[[:space:]]*true'; then
             echo "🎉 恭喜！台灣就業通最新期別同步成功！"
+          elif [ "$HTTP_CODE" -eq 200 ] && echo "$HTTP_BODY" | grep -q '冷卻中'; then
+            echo "⏳ 同步作業進行中或冷卻中，本次略過。"
+          elif [ "$HTTP_CODE" -eq 200 ]; then
+            # 伺服器有回應但爬取失敗（例如連不到台灣就業通），讓排程顯示紅色叉叉以便察覺
+            echo "❌ 伺服器回報同步失敗，請查看上方「伺服器回應」。"
+            exit 1
           else
             echo "❌ 同步未成功（狀態碼: $HTTP_CODE），請檢查後端日誌或密鑰設定。"
             exit 1

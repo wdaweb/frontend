@@ -51,32 +51,51 @@ def build_display_name(official_name, training_start_date, course_id):
         return official_name
     return f"{TARGET_KEYWORD} (代碼 {course_id})"
 
-def get_session_and_token():
-    """建立 Session 並取得台灣就業通首頁之 __RequestVerificationToken"""
-    # 預設完整驗證 TLS 憑證，防止中間人竄改期別資料。
-    # 若官方站台憑證鏈異常導致無法連線，可暫時設定環境變數 TAIWANJOBS_SKIP_TLS_VERIFY=True 作為應急。
+def _build_opener(verify_tls=True):
+    """建立帶 Cookie 的 opener；verify_tls=False 時不驗證 TLS 憑證"""
     ctx = ssl.create_default_context()
-    if os.getenv("TAIWANJOBS_SKIP_TLS_VERIFY", "False") == "True":
-        logger.warning("[TaiwanJobs] ⚠️ 已依環境變數關閉 TLS 憑證驗證，請儘速恢復")
+    if not verify_tls:
         ctx.check_hostname = False
         ctx.verify_mode = ssl.CERT_NONE
-    
-    cj = http.cookiejar.CookieJar()
-    opener = urllib.request.build_opener(
-        urllib.request.HTTPCookieProcessor(cj),
-        urllib.request.HTTPSHandler(context=ctx)
+    return urllib.request.build_opener(
+        urllib.request.HTTPCookieProcessor(http.cookiejar.CookieJar()),
+        urllib.request.HTTPSHandler(context=ctx),
     )
-    
-    try:
-        req = urllib.request.Request(f"{TAIWANJOBS_BASE_URL}/Course", headers=HEADERS)
-        with opener.open(req, timeout=15) as res:
-            html = res.read().decode('utf-8', errors='ignore')
-            tokens = re.findall(r'<input\b[^>]*name="__RequestVerificationToken"[^>]*value="([^"]*)"', html)
-            token = tokens[1] if len(tokens) > 1 else (tokens[0] if tokens else "")
-            return opener, token
-    except Exception as e:
-        logger.error(f"[TaiwanJobs] 取得 Session/Token 失敗: {e}")
-        return None, None
+
+def _is_cert_verify_error(exc):
+    return isinstance(exc, ssl.SSLCertVerificationError) or isinstance(
+        getattr(exc, "reason", None), ssl.SSLCertVerificationError
+    )
+
+def get_session_and_token():
+    """建立 Session 並取得台灣就業通首頁之 __RequestVerificationToken
+
+    預設先驗證 TLS 憑證。台灣就業通的憑證鏈常缺少中繼憑證（瀏覽器會自動補，Python 不會），
+    驗證失敗時改以不驗證憑證的連線重試並記錄警告，避免同步整個停擺。
+    設定 TAIWANJOBS_SKIP_TLS_VERIFY=True 則一開始就不驗證。
+    """
+    if os.getenv("TAIWANJOBS_SKIP_TLS_VERIFY", "False") == "True":
+        logger.warning("[TaiwanJobs] ⚠️ 已依環境變數關閉 TLS 憑證驗證")
+        attempts = [False]
+    else:
+        attempts = [True, False]
+
+    for verify_tls in attempts:
+        opener = _build_opener(verify_tls)
+        try:
+            req = urllib.request.Request(f"{TAIWANJOBS_BASE_URL}/Course", headers=HEADERS)
+            with opener.open(req, timeout=15) as res:
+                html = res.read().decode('utf-8', errors='ignore')
+                tokens = re.findall(r'<input\b[^>]*name="__RequestVerificationToken"[^>]*value="([^"]*)"', html)
+                token = tokens[1] if len(tokens) > 1 else (tokens[0] if tokens else "")
+                return opener, token
+        except Exception as e:
+            if verify_tls and _is_cert_verify_error(e):
+                logger.warning(f"[TaiwanJobs] ⚠️ TLS 憑證鏈驗證失敗，改以不驗證憑證重試: {e}")
+                continue
+            logger.error(f"[TaiwanJobs] 取得 Session/Token 失敗: {e}")
+            return None, None
+    return None, None
 
 def search_taiwanjobs_courses(opener, token, keyword=TARGET_KEYWORD):
     """直接在台灣就業通 POST 搜尋指定關鍵字之課程代碼列表"""

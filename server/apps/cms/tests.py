@@ -373,3 +373,44 @@ class BatchNamingTests(TestCase):
         batch = AdmissionBatch.objects.get(course_code="167125")
         self.assertEqual(batch.batch_name, "管理員自訂名稱")
         self.assertEqual(batch.applicants_count, 7)
+
+
+class TlsFallbackTests(TestCase):
+    """台灣就業通憑證鏈不完整時，需改以不驗證憑證重試，而非整個同步失敗"""
+
+    TOKEN_HTML = '<input name="__RequestVerificationToken" value="a"><input name="__RequestVerificationToken" value="b">'
+
+    def test_falls_back_when_certificate_chain_fails(self):
+        import ssl
+        import urllib.error
+
+        class FailingOpener:
+            def open(self, req, timeout=None):
+                raise urllib.error.URLError(ssl.SSLCertVerificationError("unable to get local issuer certificate"))
+
+        calls = []
+
+        def fake_build(verify_tls=True):
+            calls.append(verify_tls)
+            return FailingOpener() if verify_tls else FakeOpener(self.TOKEN_HTML)
+
+        with mock.patch.object(batch_sync, "_build_opener", side_effect=fake_build):
+            opener, token = batch_sync.get_session_and_token()
+        self.assertEqual(calls, [True, False])
+        self.assertIsNotNone(opener)
+        self.assertEqual(token, "b")
+
+    def test_other_errors_do_not_retry(self):
+        class DownOpener:
+            def open(self, req, timeout=None):
+                raise RuntimeError("network down")
+
+        calls = []
+
+        def fake_build(verify_tls=True):
+            calls.append(verify_tls)
+            return DownOpener()
+
+        with mock.patch.object(batch_sync, "_build_opener", side_effect=fake_build):
+            self.assertEqual(batch_sync.get_session_and_token(), (None, None))
+        self.assertEqual(calls, [True])
