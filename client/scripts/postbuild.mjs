@@ -42,7 +42,10 @@ function readViewSeo(viewFile) {
     const m = block.match(new RegExp(`${key}:\\s*'((?:[^'\\\\]|\\\\.)*)'`))
     return m ? m[1].replace(/\\'/g, "'") : null
   }
-  return { title: pick('title'), description: pick('description') }
+  // description 若為動態組合，改讀元件內的靜態常數 SEO_DESCRIPTION
+  const constMatch = source.match(/const SEO_DESCRIPTION\s*=\s*'((?:[^'\\]|\\.)*)'/)
+  const staticDescription = constMatch ? constMatch[1].replace(/\\'/g, "'") : null
+  return { title: pick('title'), description: pick('description') || staticDescription }
 }
 
 function replaceOrWarn(html, pattern, replacement, label, routePath) {

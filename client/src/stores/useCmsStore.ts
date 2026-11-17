@@ -87,6 +87,43 @@ export const useCmsStore = defineStore('cms', () => {
 		}, delay)
 	}
 
+	// 後端喚醒後會在背景補抓台灣就業通最新期別（約需數十秒），因此首次連線成功後再靜默更新一次期別
+	const BATCH_REFRESH_DELAY_MS = 45000
+	let batchRefreshScheduled = false
+
+	function scheduleBatchRefreshAfterWake() {
+		if (batchRefreshScheduled) return
+		batchRefreshScheduled = true
+		setTimeout(async () => {
+			try {
+				const latest = await api.getBatches()
+				if (Array.isArray(latest)) {
+					batches.value = latest
+					saveCache()
+				}
+			} catch (e) {
+				// 靜默失敗：保留目前顯示的期別
+			}
+		}, BATCH_REFRESH_DELAY_MS)
+	}
+
+	function saveCache() {
+		try {
+			const payload: CmsCachePayload = {
+				settings: settings.value,
+				carousels: carousels.value,
+				batches: batches.value,
+				modules: modules.value,
+				techCards: techCards.value,
+				facilities: facilities.value,
+				projects: projects.value,
+				faqs: faqs.value,
+				savedAt: Date.now(),
+			}
+			localStorage.setItem(CACHE_KEY, JSON.stringify(payload))
+		} catch (e) {}
+	}
+
 	// 背景靜默非同步喚醒後端 API 並更新最新狀態 (支援 isSilent 靜默重試不閃爍 Loading)
 	async function fetchAll(isSilent = false) {
 		if (!isSilent) isLoading.value = true
@@ -127,25 +164,13 @@ export const useCmsStore = defineStore('cms', () => {
 					clearTimeout(retryTimer)
 					retryTimer = null
 				}
+				scheduleBatchRefreshAfterWake()
 			} else {
 				scheduleSilentRetry()
 			}
 
 			// 儲存最新快照到 localStorage
-			try {
-				const payload: CmsCachePayload = {
-					settings: settings.value,
-					carousels: carousels.value,
-					batches: batches.value,
-					modules: modules.value,
-					techCards: techCards.value,
-					facilities: facilities.value,
-					projects: projects.value,
-					faqs: faqs.value,
-					savedAt: Date.now(),
-				}
-				localStorage.setItem(CACHE_KEY, JSON.stringify(payload))
-			} catch (e) {}
+			saveCache()
 		} catch (err: unknown) {
 			error.value = err instanceof Error ? err.message : '後端 API 連線異常'
 			console.warn('CMS API 背景載入提示（目前使用即時離線快照呈現）:', err)

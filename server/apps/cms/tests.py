@@ -14,7 +14,7 @@ from django.test import TestCase
 from django.utils import timezone
 
 from apps.cms.models import AdmissionBatch, StudentProject
-from apps.cms.services import batch_sync
+from apps.cms.services import batch_sync, startup_sync
 
 TAIPEI = ZoneInfo("Asia/Taipei")
 
@@ -273,3 +273,48 @@ class LoadCmsBackupTests(TestCase):
         ])
         call_command("load_cms_backup", fixture, stdout=mock.MagicMock())
         self.assertTrue(StudentProject.objects.filter(pk=500, project_name="新作品").exists())
+
+
+class StartupSyncTests(TestCase):
+    """伺服器喚醒時的自動補抓"""
+
+    def test_only_enabled_for_gunicorn_in_production(self):
+        with mock.patch.dict("os.environ", {}, clear=False):
+            import os
+            os.environ.pop("BATCH_SYNC_ON_STARTUP", None)
+            with self.settings(DEBUG=False):
+                self.assertTrue(startup_sync.is_startup_sync_enabled(["/usr/bin/gunicorn", "core.wsgi"]))
+                self.assertFalse(startup_sync.is_startup_sync_enabled(["manage.py", "test"]))
+            with self.settings(DEBUG=True):
+                self.assertFalse(startup_sync.is_startup_sync_enabled(["/usr/bin/gunicorn"]))
+
+    def test_env_flag_overrides(self):
+        with mock.patch.dict("os.environ", {"BATCH_SYNC_ON_STARTUP": "False"}):
+            self.assertFalse(startup_sync.is_startup_sync_enabled(["/usr/bin/gunicorn"]))
+        with mock.patch.dict("os.environ", {"BATCH_SYNC_ON_STARTUP": "True"}):
+            self.assertTrue(startup_sync.is_startup_sync_enabled(["manage.py"]))
+
+    def test_stale_detection(self):
+        self.assertTrue(startup_sync.is_sync_stale())  # 沒有任何期別
+        batch = make_batch()
+        self.assertTrue(startup_sync.is_sync_stale())  # 從未同步
+        AdmissionBatch.objects.filter(pk=batch.pk).update(last_synced_at=timezone.now() - timedelta(hours=1))
+        self.assertFalse(startup_sync.is_sync_stale())
+        AdmissionBatch.objects.filter(pk=batch.pk).update(last_synced_at=timezone.now() - timedelta(hours=7))
+        self.assertTrue(startup_sync.is_sync_stale())
+
+    def test_runs_sync_only_when_stale(self):
+        batch = make_batch(last_synced_at=timezone.now())
+        with mock.patch.object(batch_sync, "sync_admission_batches") as sync:
+            self.assertIsNone(startup_sync.run_startup_sync())
+            sync.assert_not_called()
+        AdmissionBatch.objects.filter(pk=batch.pk).update(last_synced_at=timezone.now() - timedelta(days=30))
+        with mock.patch.object(batch_sync, "sync_admission_batches",
+                               return_value={"success": True, "created": 1, "updated": 0, "errors": []}) as sync:
+            result = startup_sync.run_startup_sync()
+            sync.assert_called_once()
+            self.assertEqual(result["created"], 1)
+
+    def test_sync_errors_never_raise(self):
+        with mock.patch.object(batch_sync, "sync_admission_batches", side_effect=RuntimeError("network down")):
+            self.assertIsNone(startup_sync.run_startup_sync())
