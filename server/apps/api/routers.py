@@ -1,5 +1,6 @@
 import os
 import hmac
+import json
 from typing import List, Optional
 from ninja import NinjaAPI
 from ninja.security import django_auth
@@ -161,7 +162,9 @@ def _extract_cron_token(request) -> str:
 @api.post("/cron/batches/sync", response={200: ApiResponse, 403: ApiResponse}, tags=["Cron 自動排程"])
 def cron_batches_sync_post(request):
     """
-    供外部定時排程 (如 GitHub Actions) 透過 POST 觸發台灣就業通同步。
+    供外部定時排程 (如 GitHub Actions) 或本地管理腳本透過 POST 觸發台灣就業通同步。
+    - 空白請求體：由本伺服器直接向台灣就業通爬取更新。
+    - 帶有 JSON {"batches": [...]}：將外部爬蟲抓取之資料安全驗證後寫入資料庫（供海外機房受阻時備援推送）。
     密鑰必須由環境變數 CRON_SECRET_TOKEN 提供；未設定時一律拒絕（不提供任何預設值）。
     """
     expected_token = os.getenv("CRON_SECRET_TOKEN", "").strip()
@@ -172,12 +175,27 @@ def cron_batches_sync_post(request):
     ):
         return 403, {"success": False, "message": "未授權：無效的排程密鑰 (Invalid Cron Token)"}
 
+    raw_body = (request.body or b"").strip()
+    push_batches = None
+    content_type = (request.content_type or "").lower()
+    if raw_body and "application/json" in content_type:
+        try:
+            payload = json.loads(raw_body.decode("utf-8"))
+        except Exception:
+            return {"success": False, "message": "同步失敗: 請求內容不是合法的 JSON"}
+        if not isinstance(payload, dict) or not isinstance(payload.get("batches"), list):
+            return {"success": False, "message": "同步失敗: 請求缺少 batches 陣列欄位"}
+        push_batches = payload["batches"]
+
     lock_key = "lock:batch_sync_trigger"
     if not cache.add(lock_key, True, timeout=60):
         return {"success": False, "message": "背景同步作業已在進行中或冷卻中，請稍候再試。"}
     try:
-        from apps.cms.services.batch_sync import sync_admission_batches
-        res = sync_admission_batches()
+        from apps.cms.services import batch_sync
+        if push_batches is not None:
+            res = batch_sync.ingest_synced_batches(push_batches)
+        else:
+            res = batch_sync.sync_admission_batches()
         if res["success"]:
             return {"success": True, "message": f"同步成功！新增 {res['created']} 筆，更新 {res['updated']} 筆。"}
         return {"success": False, "message": f"同步失敗: {', '.join(res['errors'])}"}

@@ -28,6 +28,7 @@ jobs:
           echo "========================================================"
 
       - name: Trigger Remote Backend Sync Endpoint
+        id: render_sync
         run: |
           BASE_URL="${{ secrets.RENDER_API_BASE_URL }}"
           if [ -z "$BASE_URL" ]; then
@@ -65,10 +66,35 @@ jobs:
           elif [ "$HTTP_CODE" -eq 200 ] && echo "$HTTP_BODY" | grep -q '冷卻中'; then
             echo "⏳ 同步作業進行中或冷卻中，本次略過。"
           elif [ "$HTTP_CODE" -eq 200 ]; then
-            # 伺服器有回應但爬取失敗（例如連不到台灣就業通），讓排程顯示紅色叉叉以便察覺
-            echo "❌ 伺服器回報同步失敗，請查看上方「伺服器回應」。"
-            exit 1
+            echo "⚠️ Render 直連台灣就業通失敗，準備嘗試從 GitHub Runner 備援抓取並推送..."
+            echo "needs_fallback=true" >> "$GITHUB_OUTPUT"
           else
             echo "❌ 同步未成功（狀態碼: $HTTP_CODE），請檢查後端日誌或密鑰設定。"
             exit 1
           fi
+
+      - name: Checkout for Fallback Crawler
+        if: steps.render_sync.outputs.needs_fallback == 'true'
+        uses: actions/checkout@v4
+
+      - name: Setup Python for Fallback Crawler
+        if: steps.render_sync.outputs.needs_fallback == 'true'
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: 'pip'
+          cache-dependency-path: server/requirements.txt
+
+      - name: Fallback Fetch & Push to Render
+        if: steps.render_sync.outputs.needs_fallback == 'true'
+        env:
+          CRON_SECRET_TOKEN: ${{ secrets.CRON_SECRET_TOKEN }}
+          RENDER_API_BASE_URL: ${{ secrets.RENDER_API_BASE_URL || 'https://wdaweb.onrender.com' }}
+          DEBUG: 'True'
+        run: |
+          pip install -q -r server/requirements.txt
+          python server/manage.py sync_course_batches --push || {
+            echo "❌ 備援連線亦無法建立至台灣就業通（政府網站可能阻擋海外雲端機房 IP）。"
+            echo "💡 請於台灣本地網路環境設定 CRON_SECRET_TOKEN 後執行：python server/manage.py sync_course_batches --push"
+            exit 1
+          }

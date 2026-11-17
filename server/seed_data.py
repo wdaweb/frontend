@@ -88,21 +88,6 @@ else:
 # 4. 招生期別 (僅在完全無期別時建立預設官方數據)
 if not AdmissionBatch.objects.exists():
     AdmissionBatch.objects.create(
-        course_code="159268",
-        batch_name="前端網頁技術與AI應用（第 1 期）",
-        total_hours=920,
-        enroll_start_date=date(2025, 12, 4),
-        enroll_end_date=date(2026, 2, 25),
-        screening_date=date(2026, 3, 11),
-        training_start_date=date(2026, 3, 25),
-        training_end_date=date(2026, 9, 10),
-        planned_trainees=24,
-        applicants_count=36,
-        apply_url="https://its.taiwanjobs.gov.tw/Course/Detail?ID=159268",
-        status_override="ended",
-        sort_order=1
-    )
-    AdmissionBatch.objects.create(
         course_code="159269",
         batch_name="前端網頁技術與AI應用（第 2 期）",
         total_hours=920,
@@ -117,14 +102,29 @@ if not AdmissionBatch.objects.exists():
         status_override="auto",
         sort_order=2
     )
+    AdmissionBatch.objects.create(
+        course_code="167125",
+        batch_name="前端網頁技術與AI應用（116 年度第 1 期）",
+        total_hours=920,
+        enroll_start_date=date(2026, 11, 16),
+        enroll_end_date=date(2027, 2, 16),
+        screening_date=date(2027, 2, 25),
+        training_start_date=date(2027, 4, 1),
+        training_end_date=date(2027, 9, 20),
+        planned_trainees=24,
+        applicants_count=0,
+        apply_url="https://its.taiwanjobs.gov.tw/Course/Detail?ID=167125",
+        status_override="auto",
+        sort_order=3
+    )
     print("[OK] 招生期別官方預設資料建立完成")
 else:
-    # 確保第 1 期已結訓狀態鎖定
+    # 確保歷史第 1 期 (159268) 於前台保持隱藏
     b1 = AdmissionBatch.objects.filter(course_code="159268").first()
-    if b1 and b1.status_override != "ended":
-        b1.status_override = "ended"
+    if b1 and b1.status_override not in ("ended", "hidden"):
+        b1.status_override = "hidden"
         b1.save(update_fields=["status_override"])
-    print("[INFO] 招生期別已存在，第 1 期狀態已確認為已結訓")
+    print("[INFO] 招生期別已存在，既有設定已保留")
 
 # 5. 7 大課程模組 (僅在完全無模組時建立預設值)
 if not CurriculumModule.objects.exists():

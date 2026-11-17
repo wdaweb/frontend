@@ -51,8 +51,8 @@ A: 可以。泰山職訓場「前端網頁技術與AI應用」為政府自辦職
 
 ## 招生期別與代碼 (Admission Batches)
 
-- **最新期別**：報名期間、甄試日期、課程代碼與報名連結以 https://wdaweb.github.io/frontend/admission/ 為準，該頁資料每日自動與台灣就業通同步。
-- **歷屆期別**：第 1 期課程代碼 159268、第 2 期課程代碼 159269。
+- **最新期別**：116 年度第 1 期課程代碼 167125（報名期間 2026/11/16～2027/02/16，https://its.taiwanjobs.gov.tw/Course/Detail?ID=167125）；最新即時資料與動態名額亦同步於 https://wdaweb.github.io/frontend/admission/ 。
+- **歷屆與培訓中期別**：115 年度第 2 期課程代碼 159269（培訓中）、115 年度第 1 期課程代碼 159268（已結訓）。
 
 ## 常見問題重點摘要 (Key FAQ Facts)
 

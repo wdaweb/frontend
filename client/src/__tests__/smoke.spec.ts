@@ -18,17 +18,17 @@ import router from '../router/index'
 
 describe('🚀 系統生命徵象冒煙測試 (Smoke & Sanity)', () => {
   describe('1. 官方核心數據一致性檢查 (不可偏離)', () => {
-    it('第 1 期與第 2 期官方課程代碼必須準確無誤', () => {
-      const batch1 = defaultBatches.find(b => b.batch_name.includes('1'))
-      const batch2 = defaultBatches.find(b => b.batch_name.includes('2'))
-
-      expect(batch1).toBeDefined()
-      expect(batch1?.course_code).toBe('159268')
-      expect(batch1?.apply_url).toContain('ID=159268')
+    it('現行雙期別官方課程代碼必須準確無誤（115年第2期 + 116年第1期）', () => {
+      const batch2 = defaultBatches.find(b => b.course_code === '159269')
+      const batchNew1 = defaultBatches.find(b => b.course_code === '167125')
 
       expect(batch2).toBeDefined()
       expect(batch2?.course_code).toBe('159269')
       expect(batch2?.apply_url).toContain('ID=159269')
+
+      expect(batchNew1).toBeDefined()
+      expect(batchNew1?.course_code).toBe('167125')
+      expect(batchNew1?.apply_url).toContain('ID=167125')
     })
 
     it('官方諮詢電話、時數與職訓地址必須符合官方規範', () => {

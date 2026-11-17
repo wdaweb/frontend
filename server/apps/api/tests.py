@@ -83,6 +83,34 @@ class CronEndpointTests(TestCase):
         self.assertTrue(res.json()["success"])
         self.assertEqual(self.post(headers={"Authorization": "Bearer s3cret"}).status_code, 200)
 
+    @mock.patch.dict(os.environ, {"CRON_SECRET_TOKEN": "s3cret"})
+    def test_accepts_pushed_batches_json(self, _sync):
+        import json
+        payload = {
+            "batches": [{
+                "id": "167125",
+                "name": "前端網頁技術與AI應用(泰山)第 01期",
+                "enroll_start_date": "2026-11-16",
+                "enroll_end_date": "2027-02-16",
+                "training_start_date": "2027-04-01",
+                "training_end_date": "2027-09-20",
+                "screening_date": "2027-02-25",
+                "total_hours": 920,
+                "planned_trainees": 24,
+                "applicants_count": 0,
+            }]
+        }
+        res = self.client.post(
+            CRON_URL,
+            data=json.dumps(payload),
+            content_type="application/json",
+            headers={"X-Cron-Token": "s3cret"},
+        )
+        self.assertEqual(res.status_code, 200)
+        self.assertTrue(res.json()["success"])
+        _sync.assert_not_called()
+        self.assertTrue(AdmissionBatch.objects.filter(course_code="167125").exists())
+
 
 @mock.patch("apps.cms.services.batch_sync.sync_admission_batches", return_value=SYNC_OK)
 class AdminSyncEndpointTests(TestCase):

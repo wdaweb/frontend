@@ -7,7 +7,7 @@ import urllib.parse
 import http.cookiejar
 import ssl
 import re
-from datetime import datetime
+from datetime import date, datetime
 from django.utils import timezone
 from apps.cms.models import AdmissionBatch
 
@@ -15,12 +15,20 @@ logger = logging.getLogger(__name__)
 
 TAIWANJOBS_BASE_URL = "https://its.taiwanjobs.gov.tw"
 TARGET_KEYWORD = "前端網頁技術與AI應用"
-HEADERS = {
+BASE_HEADERS = {
     'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
     'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
     'Accept-Language': 'zh-TW,zh;q=0.9,en-US;q=0.8,en;q=0.7',
+}
+GET_HEADERS = {
+    **BASE_HEADERS,
+    'Upgrade-Insecure-Requests': '1',
+    'Cache-Control': 'no-cache',
+}
+HEADERS = {
+    **BASE_HEADERS,
     'Origin': 'https://its.taiwanjobs.gov.tw',
-    'Referer': 'https://its.taiwanjobs.gov.tw/Course'
+    'Referer': 'https://its.taiwanjobs.gov.tw/Course',
 }
 
 def roc_to_ad_date(roc_str):
@@ -67,7 +75,20 @@ def _is_cert_verify_error(exc):
         getattr(exc, "reason", None), ssl.SSLCertVerificationError
     )
 
-def get_session_and_token():
+def _coerce_date(value):
+    """將 date 物件或 YYYY-MM-DD 字串轉成 date；空值回傳 None"""
+    if value is None or value == "":
+        return None
+    if isinstance(value, datetime):
+        return value.date()
+    if isinstance(value, date):
+        return value
+    if isinstance(value, str):
+        return datetime.strptime(value.strip()[:10], "%Y-%m-%d").date()
+    raise ValueError(f"無法識別的日期格式: {value!r}")
+
+
+def get_session_and_token(error_holder=None):
     """建立 Session 並取得台灣就業通首頁之 __RequestVerificationToken
 
     預設先驗證 TLS 憑證。台灣就業通的憑證鏈常缺少中繼憑證（瀏覽器會自動補，Python 不會），
@@ -80,22 +101,35 @@ def get_session_and_token():
     else:
         attempts = [True, False]
 
+    last_err = None
     for verify_tls in attempts:
         opener = _build_opener(verify_tls)
         try:
-            req = urllib.request.Request(f"{TAIWANJOBS_BASE_URL}/Course", headers=HEADERS)
-            with opener.open(req, timeout=15) as res:
+            req = urllib.request.Request(f"{TAIWANJOBS_BASE_URL}/Course", headers=GET_HEADERS)
+            with opener.open(req, timeout=25) as res:
+                status = getattr(res, "status", 200)
                 html = res.read().decode('utf-8', errors='ignore')
                 tokens = re.findall(r'<input\b[^>]*name="__RequestVerificationToken"[^>]*value="([^"]*)"', html)
                 token = tokens[1] if len(tokens) > 1 else (tokens[0] if tokens else "")
+                if not token:
+                    last_err = f"HTTP {status} 頁面缺少 VerificationToken（可能遭官方 WAF 阻擋）"
+                    logger.warning(f"[TaiwanJobs] {last_err}")
+                    if error_holder is not None:
+                        error_holder.append(last_err)
                 return opener, token
         except Exception as e:
+            last_err = f"{type(e).__name__}: {e}"
             if verify_tls and _is_cert_verify_error(e):
                 logger.warning(f"[TaiwanJobs] ⚠️ TLS 憑證鏈驗證失敗，改以不驗證憑證重試: {e}")
                 continue
             logger.error(f"[TaiwanJobs] 取得 Session/Token 失敗: {e}")
+            if error_holder is not None:
+                error_holder.append(last_err)
             return None, None
+    if error_holder is not None and last_err:
+        error_holder.append(last_err)
     return None, None
+
 
 def search_taiwanjobs_courses(opener, token, keyword=TARGET_KEYWORD):
     """直接在台灣就業通 POST 搜尋指定關鍵字之課程代碼列表"""
@@ -109,11 +143,11 @@ def search_taiwanjobs_courses(opener, token, keyword=TARGET_KEYWORD):
     encoded_data = urllib.parse.urlencode(post_data).encode('utf-8')
     headers = dict(HEADERS)
     headers['Content-Type'] = 'application/x-www-form-urlencoded'
-    
+
     found_ids = set()
     try:
         req = urllib.request.Request(f"{TAIWANJOBS_BASE_URL}/Course", data=encoded_data, headers=headers)
-        with opener.open(req, timeout=20) as res:
+        with opener.open(req, timeout=25) as res:
             html = res.read().decode('utf-8', errors='ignore')
             # 提取所有 Detail?ID=xxxxx
             matches = re.findall(r'/Course/Detail\?ID=(\d+)', html)
@@ -121,21 +155,22 @@ def search_taiwanjobs_courses(opener, token, keyword=TARGET_KEYWORD):
                 found_ids.add(cid)
     except Exception as e:
         logger.error(f"[TaiwanJobs] 搜尋課程失敗: {e}")
-        
+
     return list(found_ids)
+
 
 def parse_taiwanjobs_detail_page(opener, course_id):
     """直接抓取並解析台灣就業通特定課程之詳細頁面 HTML"""
     url = f"{TAIWANJOBS_BASE_URL}/Course/Detail?ID={course_id}"
     try:
-        req = urllib.request.Request(url, headers=HEADERS)
-        with opener.open(req, timeout=15) as res:
+        req = urllib.request.Request(url, headers=GET_HEADERS)
+        with opener.open(req, timeout=25) as res:
             final_url = res.geturl()
             # 若被重定向回首頁，表示官方已下架該課程
             if "/Course/Detail" not in final_url:
                 logger.info(f"[TaiwanJobs] 課程 {course_id} 已過期被重定向至 {final_url}")
                 return None
-                
+
             html = res.read().decode('utf-8', errors='ignore')
             clean = re.sub(r'<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>', '', html, flags=re.I)
             clean = re.sub(r'<style\b[^<]*(?:(?!<\/style>)<[^<]*)*<\/style>', '', clean, flags=re.I)
@@ -155,16 +190,15 @@ def parse_taiwanjobs_detail_page(opener, course_id):
             if title:
                 data['name'] = title
 
-            # 2. 人數欄位 (招訓學員 / 目前報名人數)
+            # 2. 人數欄位 (相容舊版「招訓學員/報名人數」與新版「一般訓練學員數/目前一般訓練報名人數」)
             m_td = re.search(r'<td[^>]*data-th="[^"]*(?:備註|人數)[^"]*"[^>]*>(.*?)<\/td>', clean, re.S)
-            if m_td:
-                td_txt = re.sub(r'<[^>]+>', ' ', m_td.group(1))
-                m_plan = re.search(r'招訓學員\s*[:：]\s*(\d+)', td_txt)
-                if m_plan:
-                    data['planned_trainees'] = int(m_plan.group(1))
-                m_app = re.search(r'報名人數\s*[:：]\s*(\d+)', td_txt)
-                if m_app:
-                    data['applicants_count'] = int(m_app.group(1))
+            quota_text = re.sub(r'<[^>]+>', ' ', m_td.group(1)) if m_td else text
+            m_plan = re.search(r'(?:招訓學員|一般訓練學員數)\s*[:：]\s*(\d+)', quota_text)
+            if m_plan:
+                data['planned_trainees'] = int(m_plan.group(1))
+            m_app = re.search(r'(?:目前一般訓練)?報名人數\s*[:：]\s*(\d+)', quota_text)
+            if m_app:
+                data['applicants_count'] = int(m_app.group(1))
 
             # 3. 報名起訖 (民國年)
             dates = re.findall(r'(\d{2,3}/\d{1,2}/\d{1,2}(?:\s+\d{1,2}:\d{1,2})?)\s*~\s*(\d{2,3}/\d{1,2}/\d{1,2}(?:\s+\d{1,2}:\d{1,2})?)', text)
@@ -189,12 +223,29 @@ def parse_taiwanjobs_detail_page(opener, course_id):
         logger.error(f"[TaiwanJobs] 解析課程詳情 {course_id} 失敗: {e}")
         return None
 
-def sync_admission_batches():
-    """
-    直接以「台灣就業通官方網站」為目標爬取前端課程報名資訊。
-    若官方釋出新期別（如第 3 期）會自動抓取並建立；
-    若歷史期別已過期下線，則保持資料庫既有成果與狀態不被刪除。
-    """
+
+def fetch_live_batches(keyword=TARGET_KEYWORD):
+    """連線台灣就業通抓取所有目前在線課程明細，回傳 (details, error_message)"""
+    conn_errors = []
+    opener, token = get_session_and_token(error_holder=conn_errors)
+    if not opener or not token:
+        detail_msg = f"（{conn_errors[-1]}）" if conn_errors else ""
+        return None, f"無法連線至台灣就業通官方網站建立 Session{detail_msg}"
+
+    logger.info("[TaiwanJobs] 正在直接向台灣就業通官方搜尋最新「前端網頁技術與AI應用」課程...")
+    active_course_ids = search_taiwanjobs_courses(opener, token, keyword)
+    logger.info(f"[TaiwanJobs] 官方搜尋結果代碼列表: {active_course_ids}")
+
+    details = []
+    for cid in active_course_ids:
+        detail = parse_taiwanjobs_detail_page(opener, cid)
+        if detail and detail.get('enroll_start_date'):
+            details.append(detail)
+    return details, None
+
+
+def upsert_synced_batches(details, had_active_courses=None):
+    """將已解析之課程明細清單寫入資料庫，並保留管理員自訂名稱、排序與軟刪除紀錄"""
     results = {
         "success": False,
         "created": 0,
@@ -204,88 +255,85 @@ def sync_admission_batches():
         "source": "https://its.taiwanjobs.gov.tw"
     }
 
-    # 1. 建立 Session 並搜尋官方台灣就業通
-    opener, token = get_session_and_token()
-    if not opener or not token:
-        err = "無法連線至台灣就業通官方網站建立 Session"
-        results["errors"].append(err)
-        return results
-
-    logger.info("[TaiwanJobs] 正在直接向台灣就業通官方搜尋最新「前端網頁技術與AI應用」課程...")
-    active_course_ids = search_taiwanjobs_courses(opener, token, TARGET_KEYWORD)
-    logger.info(f"[TaiwanJobs] 官方搜尋結果代碼列表: {active_course_ids}")
-
-    # 2. 針對在線課程進行詳細頁面爬取與更新
     now = timezone.now()
-    for cid in active_course_ids:
-        detail = parse_taiwanjobs_detail_page(opener, cid)
-        if detail and detail.get('enroll_start_date'):
-            try:
-                batch_name = build_display_name(detail.get('name'), detail.get('training_start_date'), cid)
+    for detail in details:
+        cid = str(detail.get("course_code") or detail.get("id") or "").strip()
+        if not cid:
+            continue
+        try:
+            enroll_start = _coerce_date(detail.get('enroll_start_date'))
+            enroll_end = _coerce_date(detail.get('enroll_end_date'))
+            training_start = _coerce_date(detail.get('training_start_date'))
+            training_end = _coerce_date(detail.get('training_end_date'))
+            screening = _coerce_date(detail.get('screening_date'))
+            if not enroll_start or not enroll_end or not training_start or not training_end:
+                raise ValueError("缺少必要報名或受訓起訖日期")
 
-                # 官方資料欄位（每次同步都以台灣就業通為準）
-                # 期別名稱只在新建時產生，之後不覆蓋，保留管理員在後台的改名
-                synced_fields = {
-                    "total_hours": detail.get('total_hours', 920),
-                    "enroll_start_date": detail.get('enroll_start_date'),
-                    "enroll_end_date": detail.get('enroll_end_date'),
-                    "training_start_date": detail.get('training_start_date'),
-                    "training_end_date": detail.get('training_end_date'),
-                    "screening_date": detail.get('screening_date'),
-                    "planned_trainees": detail.get('planned_trainees', 24),
-                    "applicants_count": detail.get('applicants_count', 0),
-                    "apply_url": detail.get('apply_url', f"https://its.taiwanjobs.gov.tw/Course/Detail?ID={cid}"),
-                    "last_synced_at": now,
-                }
+            batch_name = detail.get("batch_name") or build_display_name(detail.get('name'), training_start, cid)
 
-                # 查詢時包含已軟刪除的資料：管理員在後台刪除的期別不會被同步重新建立
-                obj = AdmissionBatch.all_objects.filter(course_code=str(cid)).order_by('id').first()
+            # 官方資料欄位（每次同步都以台灣就業通為準）
+            # 期別名稱只在新建時產生，之後不覆蓋，保留管理員在後台的改名
+            synced_fields = {
+                "total_hours": int(detail.get('total_hours') or 920),
+                "enroll_start_date": enroll_start,
+                "enroll_end_date": enroll_end,
+                "training_start_date": training_start,
+                "training_end_date": training_end,
+                "screening_date": screening,
+                "planned_trainees": int(detail.get('planned_trainees') if detail.get('planned_trainees') is not None else 24),
+                "applicants_count": int(detail.get('applicants_count') if detail.get('applicants_count') is not None else 0),
+                "apply_url": detail.get('apply_url') or f"https://its.taiwanjobs.gov.tw/Course/Detail?ID={cid}",
+                "last_synced_at": now,
+            }
 
-                if obj is not None and obj.deleted_at is not None:
-                    logger.info(f"[TaiwanJobs] ⏭️ 期別 {cid} 已於後台刪除，略過同步")
-                    results["skipped_deleted"] = results.get("skipped_deleted", 0) + 1
-                    continue
+            # 查詢時包含已軟刪除的資料：管理員在後台刪除的期別不會被同步重新建立
+            obj = AdmissionBatch.all_objects.filter(course_code=cid).order_by('id').first()
 
-                if obj is None:
-                    # 新期別：排序接在現有期別之後；之後的同步不再更動排序，保留後台手動調整
-                    existing_count = AdmissionBatch.objects.count()
-                    obj = AdmissionBatch.objects.create(
-                        course_code=str(cid),
-                        batch_name=batch_name,
-                        sort_order=existing_count + 1,
-                        **synced_fields,
-                    )
-                    created = True
-                else:
-                    for field, value in synced_fields.items():
-                        setattr(obj, field, value)
-                    obj.save(update_fields=[*synced_fields.keys(), "updated_at"])
-                    created = False
+            if obj is not None and obj.deleted_at is not None:
+                logger.info(f"[TaiwanJobs] ⏭️ 期別 {cid} 已於後台刪除，略過同步")
+                results["skipped_deleted"] = results.get("skipped_deleted", 0) + 1
+                continue
 
-                if created:
-                    results["created"] += 1
-                    logger.info(f"[TaiwanJobs] ✅ 自動建立新期別: {batch_name} (代碼: {cid})")
-                else:
-                    results["updated"] += 1
-                    logger.info(f"[TaiwanJobs] 🔄 自動更新期別資訊: {obj.batch_name}")
+            if obj is None:
+                # 新期別：排序接在現有期別之後；之後的同步不再更動排序，保留後台手動調整
+                existing_count = AdmissionBatch.objects.count()
+                obj = AdmissionBatch.objects.create(
+                    course_code=cid,
+                    batch_name=batch_name,
+                    sort_order=existing_count + 1,
+                    **synced_fields,
+                )
+                created = True
+            else:
+                for field, value in synced_fields.items():
+                    setattr(obj, field, value)
+                obj.save(update_fields=[*synced_fields.keys(), "updated_at"])
+                created = False
 
-                results["synced_batches"].append({
-                    "id": obj.id,
-                    "course_code": str(cid),
-                    "batch_name": obj.batch_name,
-                    "applicants": obj.applicants_count,
-                    "planned": obj.planned_trainees,
-                    "status": obj.dynamic_status,
-                    "action": "created" if created else "updated"
-                })
-            except Exception as e:
-                err = f"儲存台灣就業通課程 {cid} 失敗: {str(e)}"
-                logger.error(f"[TaiwanJobs] {err}")
-                results["errors"].append(err)
+            if created:
+                results["created"] += 1
+                logger.info(f"[TaiwanJobs] ✅ 自動建立新期別: {batch_name} (代碼: {cid})")
+            else:
+                results["updated"] += 1
+                logger.info(f"[TaiwanJobs] 🔄 自動更新期別資訊: {obj.batch_name}")
 
-    # 3. 若目前台灣就業通處於截止期未搜出新在線課程，確保回報正常狀態
-    if len(active_course_ids) == 0:
-        msg = "台灣就業通目前無開放報名中之新前端班級（既有第 1、2 期已由系統安全留存展示中）"
+            results["synced_batches"].append({
+                "id": obj.id,
+                "course_code": cid,
+                "batch_name": obj.batch_name,
+                "applicants": obj.applicants_count,
+                "planned": obj.planned_trainees,
+                "status": obj.dynamic_status,
+                "action": "created" if created else "updated"
+            })
+        except Exception as e:
+            err = f"儲存台灣就業通課程 {cid} 失敗: {str(e)}"
+            logger.error(f"[TaiwanJobs] {err}")
+            results["errors"].append(err)
+
+    has_courses = had_active_courses if had_active_courses is not None else len(details) > 0
+    if not has_courses:
+        msg = "台灣就業通目前無開放報名中之新前端班級（既有期別已由系統安全留存展示中）"
         logger.info(f"[TaiwanJobs] {msg}")
         results["success"] = True
         results["message"] = msg
@@ -294,3 +342,38 @@ def sync_admission_batches():
         results["success"] = (results["created"] + results["updated"] + results.get("skipped_deleted", 0)) > 0
 
     return results
+
+
+def sync_admission_batches():
+    """
+    直接以「台灣就業通官方網站」為目標爬取前端課程報名資訊。
+    若官方釋出新期別會自動抓取並建立；
+    若歷史期別已過期下線，則保持資料庫既有成果與狀態不被刪除。
+    """
+    details, err = fetch_live_batches(TARGET_KEYWORD)
+    if err:
+        return {
+            "success": False,
+            "created": 0,
+            "updated": 0,
+            "errors": [err],
+            "synced_batches": [],
+            "source": "https://its.taiwanjobs.gov.tw"
+        }
+    return upsert_synced_batches(details, had_active_courses=len(details) > 0)
+
+
+def ingest_synced_batches(details):
+    """接收外部爬蟲回傳之 JSON 期別清單並安全寫入資料庫（供無法直連台灣就業通的雲端主機備援使用）"""
+    if not isinstance(details, list):
+        return {
+            "success": False,
+            "created": 0,
+            "updated": 0,
+            "errors": ["無效的 batches 陣列格式"],
+            "synced_batches": [],
+            "source": "external-push",
+        }
+    res = upsert_synced_batches(details, had_active_courses=len(details) > 0)
+    res["source"] = "external-push"
+    return res

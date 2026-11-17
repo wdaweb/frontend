@@ -343,6 +343,8 @@ class BatchNamingTests(TestCase):
         data = batch_sync.parse_taiwanjobs_detail_page(FakeOpener(NEW_LAYOUT_DETAIL_HTML), "167125")
         self.assertEqual(data["name"], "前端網頁技術與AI應用(泰山)第 01期")
         self.assertEqual(data["training_start_date"], date(2027, 4, 1))
+        self.assertEqual(data["planned_trainees"], 24)
+        self.assertEqual(data["applicants_count"], 0)
 
     def test_build_display_name_normalizes_number(self):
         self.assertEqual(
