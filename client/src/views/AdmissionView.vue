@@ -19,51 +19,7 @@
 
       <!-- 即時期別報名狀態指示看板 (讓民眾一眼秒懂當前報名狀態) -->
       <template #extra>
-        <div class="mt-5 max-w-xl mx-auto w-full px-2 sm:px-0">
-          <div
-            class="relative rounded-2xl p-3.5 sm:p-4.5 border backdrop-blur-xl transition-all duration-300 overflow-hidden shadow-xl"
-            :class="notice.isOpen
-              ? 'bg-emerald-950/40 border-emerald-500/40 shadow-emerald-950/50'
-              : 'bg-slate-900/85 border-amber-500/30 shadow-slate-950/60'"
-          >
-            <!-- 頂部流光微線 -->
-            <div
-              class="absolute top-0 inset-x-0 h-[1px] bg-gradient-to-r from-transparent"
-              :class="notice.isOpen ? 'via-emerald-400/50 to-transparent' : 'via-amber-400/40 to-transparent'"
-            ></div>
-
-            <div class="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4 text-left">
-              <!-- 狀態標籤 Pill Badge -->
-              <div class="flex-shrink-0">
-                <span
-                  class="inline-flex items-center px-3 py-1 rounded-full text-sm font-bold tracking-wide"
-                  :class="notice.isOpen
-                    ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40'
-                    : 'bg-amber-500/15 text-amber-300 border border-amber-500/30'"
-                >
-                  <span
-                    class="w-2 h-2 rounded-full mr-1.5"
-                    :class="notice.isOpen ? 'bg-emerald-400 animate-ping' : 'bg-amber-400'"
-                  ></span>
-                  {{ notice.badgeText }}
-                </span>
-              </div>
-
-              <!-- 核心標題與引導說明 -->
-              <div class="flex-grow">
-                <div
-                  class="text-base sm:text-lg font-bold tracking-tight"
-                  :class="notice.isOpen ? 'text-white' : 'text-amber-200'"
-                >
-                  {{ notice.headline }}
-                </div>
-                <p class="mt-1 text-sm sm:text-base text-slate-300 leading-relaxed">
-                  {{ notice.subline }}
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
+        <BatchEnrollmentBanner :notice="notice" />
       </template>
     </PageHeader>
 
@@ -81,6 +37,7 @@ import { getBatchEnrollmentNotice } from '@/utils/batchStatus'
 import { buildBatchSeoSummary, buildCourseJsonLd } from '@/utils/batchSeo'
 import PageHeader from '@/components/layout/PageHeader.vue'
 import BatchesSection from '@/components/sections/BatchesSection.vue'
+import BatchEnrollmentBanner from '@/components/sections/batches/BatchEnrollmentBanner.vue'
 
 const store = useCmsStore()
 const notice = computed(() => getBatchEnrollmentNotice(store.batches))
