@@ -53,7 +53,7 @@
     <!-- 上方資訊區 -->
     <div>
       <h3
-        class="text-lg min-[400px]:text-xl sm:text-2xl 2xl:text-3xl font-extrabold mb-4 sm:mb-5 flex items-center space-x-2.5 transition-colors break-words"
+        class="text-lg min-[440px]:text-xl sm:text-2xl lg:text-xl xl:text-2xl 2xl:text-3xl font-extrabold mb-4 sm:mb-5 flex flex-wrap items-center gap-x-3 gap-y-2 transition-colors break-words"
         :class="[
           isEnded
             ? 'pr-24 sm:pr-28 text-slate-300 group-hover:text-white'
@@ -61,6 +61,28 @@
         ]"
       >
         <span>{{ batch.batch_name }}</span>
+        <!-- 報名中閃爍狀態徽章（比照導覽列樣式，僅於開放報名期別顯示） -->
+        <span
+          v-if="isBatchEnrolling(batch) && !isEnded"
+          class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold leading-none tracking-normal whitespace-nowrap shrink-0"
+          :class="
+            isUrgentClosing
+              ? 'bg-amber-500/20 text-amber-300 border border-amber-400/40 shadow-[0_0_8px_rgba(245,158,11,0.35)]'
+              : 'bg-emerald-500/20 text-emerald-300 border border-emerald-400/40 shadow-[0_0_8px_rgba(16,185,129,0.35)]'
+          "
+        >
+          <span class="relative flex h-2 w-2 mr-1.5">
+            <span
+              class="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75"
+              :class="isUrgentClosing ? 'bg-amber-400' : 'bg-emerald-400'"
+            ></span>
+            <span
+              class="relative inline-flex rounded-full h-2 w-2"
+              :class="isUrgentClosing ? 'bg-amber-400' : 'bg-emerald-400'"
+            ></span>
+          </span>
+          <span>{{ isUrgentClosing ? '即將截止' : '報名中' }}</span>
+        </span>
       </h3>
 
       <!-- 參訓學員陣容 / 報名熱度 / 結訓成果進度看板 -->
