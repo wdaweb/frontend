@@ -90,9 +90,29 @@ export function useBatchTimeline(batchesInput: MaybeRefOrGetter<AdmissionBatch[]
   }
 
   /**
-   * 智慧自適應期別輪替與位置錨定 (Smart Adaptive Batch Slotting)：
+   * 取得期別固定欄序權重：確保「第 1 期」永遠排在左欄、「第 2 期」永遠排在右欄
+   */
+  function getBatchPeriodOrder(batch: AdmissionBatch): number {
+    const match = (batch.batch_name || '').match(/第\s*0*(\d+)\s*期/)
+    if (match) {
+      return Number(match[1])
+    }
+    return batch.sort_order ?? Number.MAX_SAFE_INTEGER
+  }
+
+  /** 前台卡片顯示順序：第 1 期在左、第 2 期在右，其餘依 sort_order 與時間遞增 */
+  function compareDisplayOrder(a: AdmissionBatch, b: AdmissionBatch): number {
+    const periodDiff = getBatchPeriodOrder(a) - getBatchPeriodOrder(b)
+    if (periodDiff !== 0) return periodDiff
+    const sortDiff = (a.sort_order ?? 0) - (b.sort_order ?? 0)
+    if (sortDiff !== 0) return sortDiff
+    return getBatchTimeValue(a) - getBatchTimeValue(b)
+  }
+
+  /**
+   * 智慧自適應期別輪替與固定期別排序：
    * 1. 總數 > 2 時，依活躍優先級篩選，優先淘汰已結訓舊班
-   * 2. 嚴格依時間序列「左舊進行中、右新即將到來/報名中」自然流向排列
+   * 2. 嚴格固定「第 1 期永遠在左欄、第 2 期永遠在右欄」
    * 3. 雙重防禦保底：若無資料自動使用 defaultBatches，確保期別卡片 100% 絕對存在
    */
   const sortedBatches = computed(() => {
@@ -101,7 +121,7 @@ export function useBatchTimeline(batchesInput: MaybeRefOrGetter<AdmissionBatch[]
     const visibleBatches = [...list].filter(b => b.status_override !== 'hidden')
 
     if (visibleBatches.length <= 2) {
-      return visibleBatches.sort((a, b) => getBatchTimeValue(a) - getBatchTimeValue(b))
+      return visibleBatches.sort(compareDisplayOrder)
     }
 
     const prioritized = [...visibleBatches].sort((a, b) => {
@@ -111,7 +131,7 @@ export function useBatchTimeline(batchesInput: MaybeRefOrGetter<AdmissionBatch[]
     })
 
     const selectedTwo = prioritized.slice(0, 2)
-    return selectedTwo.sort((a, b) => getBatchTimeValue(a) - getBatchTimeValue(b))
+    return selectedTwo.sort(compareDisplayOrder)
   })
 
   function getScreeningEndTime(screeningDateStr?: string | null): number {

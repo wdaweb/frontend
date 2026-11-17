@@ -26,7 +26,7 @@ import { ref } from 'vue'
 export { defaultBatches } from '@/data/cmsDefaultSnapshots'
 export type { GlowMotionPreset, MeteorConfig, NavbarStyleType, NebulaFeatures } from './useThemeStore'
 
-const CACHE_KEY = 'wdaweb_cms_cache_20261117'
+const CACHE_KEY = 'wdaweb_cms_cache_20261117_2'
 const CACHE_TTL_MS = 24 * 60 * 60 * 1000 // 24 小時快取效期
 
 interface CmsCachePayload {

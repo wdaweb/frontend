@@ -53,10 +53,10 @@
     <!-- 上方資訊區 -->
     <div>
       <h3
-        class="text-xl sm:text-2xl lg:text-3xl font-extrabold mb-4 sm:mb-5 flex items-center space-x-2.5 transition-colors break-words pr-24 sm:pr-28"
+        class="text-lg min-[400px]:text-xl sm:text-2xl 2xl:text-3xl font-extrabold mb-4 sm:mb-5 flex items-center space-x-2.5 transition-colors break-words"
         :class="[
           isEnded
-            ? 'text-slate-300 group-hover:text-white'
+            ? 'pr-24 sm:pr-28 text-slate-300 group-hover:text-white'
             : 'text-white group-hover:text-cyan-300',
         ]"
       >

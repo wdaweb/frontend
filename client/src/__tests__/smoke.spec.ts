@@ -4,6 +4,7 @@
  * 驗證系統最核心之生命徵象：核心數據一致性、雙期別不變量、離線快照基石與路由完整性。
  */
 import { describe, expect, it } from 'vitest'
+import { useBatchTimeline } from '../composables/useBatchTimeline'
 import {
   defaultBatches,
   defaultCarousels,
@@ -44,6 +45,15 @@ describe('🚀 系統生命徵象冒煙測試 (Smoke & Sanity)', () => {
 
     it('離線快照至少包含 1 個期別（台灣就業通開出新期別時，爬蟲會自動新增，不限定期數）', () => {
       expect(defaultBatches.length).toBeGreaterThanOrEqual(1)
+    })
+
+    it('固定欄序不變量：第 1 期永遠排在左邊，第 2 期永遠排在右邊', () => {
+      const reversed = [...defaultBatches].reverse()
+      const { sortedBatches } = useBatchTimeline(() => reversed)
+      expect(sortedBatches.value.length).toBe(2)
+      expect(sortedBatches.value[0]?.course_code).toBe('167125')
+      expect(sortedBatches.value[0]?.batch_name).toBe('前端網頁技術與AI應用（第 1 期）')
+      expect(sortedBatches.value[1]?.course_code).toBe('159269')
     })
   })
 

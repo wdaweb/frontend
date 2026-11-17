@@ -88,6 +88,21 @@ else:
 # 4. 招生期別 (僅在完全無期別時建立預設官方數據)
 if not AdmissionBatch.objects.exists():
     AdmissionBatch.objects.create(
+        course_code="167125",
+        batch_name="前端網頁技術與AI應用（第 1 期）",
+        total_hours=920,
+        enroll_start_date=date(2026, 11, 16),
+        enroll_end_date=date(2027, 2, 16),
+        screening_date=date(2027, 2, 25),
+        training_start_date=date(2027, 4, 1),
+        training_end_date=date(2027, 9, 20),
+        planned_trainees=24,
+        applicants_count=0,
+        apply_url="https://its.taiwanjobs.gov.tw/Course/Detail?ID=167125",
+        status_override="auto",
+        sort_order=1
+    )
+    AdmissionBatch.objects.create(
         course_code="159269",
         batch_name="前端網頁技術與AI應用（第 2 期）",
         total_hours=920,
@@ -101,21 +116,6 @@ if not AdmissionBatch.objects.exists():
         apply_url="https://its.taiwanjobs.gov.tw/Course/Detail?ID=159269",
         status_override="auto",
         sort_order=2
-    )
-    AdmissionBatch.objects.create(
-        course_code="167125",
-        batch_name="前端網頁技術與AI應用（116 年度第 1 期）",
-        total_hours=920,
-        enroll_start_date=date(2026, 11, 16),
-        enroll_end_date=date(2027, 2, 16),
-        screening_date=date(2027, 2, 25),
-        training_start_date=date(2027, 4, 1),
-        training_end_date=date(2027, 9, 20),
-        planned_trainees=24,
-        applicants_count=0,
-        apply_url="https://its.taiwanjobs.gov.tw/Course/Detail?ID=167125",
-        status_override="auto",
-        sort_order=3
     )
     print("[OK] 招生期別官方預設資料建立完成")
 else:
