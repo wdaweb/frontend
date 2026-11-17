@@ -40,6 +40,17 @@ def roc_to_ad_date(roc_str):
         logger.warning(f"[TaiwanJobs] 民國年轉型失敗 '{roc_str}': {e}")
     return None
 
+def build_display_name(official_name, training_start_date, course_id):
+    """將官方班名（如「前端網頁技術與AI應用(泰山)第 01期」）整理成網站統一格式
+    「前端網頁技術與AI應用（第 1 期）」；抓不到期數時沿用官方原名或課程代碼。
+    """
+    m = re.search(r'第\s*0*(\d+)\s*期', official_name or '')
+    if m:
+        return f"{TARGET_KEYWORD}（第 {int(m.group(1))} 期）"
+    if official_name:
+        return official_name
+    return f"{TARGET_KEYWORD} (代碼 {course_id})"
+
 def get_session_and_token():
     """建立 Session 並取得台灣就業通首頁之 __RequestVerificationToken"""
     # 預設完整驗證 TLS 憑證，防止中間人竄改期別資料。
@@ -115,9 +126,15 @@ def parse_taiwanjobs_detail_page(opener, course_id):
             data = {"id": str(course_id), "apply_url": url}
 
             # 1. 標題
-            title_m = re.search(r'<h[12][^>]*>(.*?)<\/h[12]>', clean, re.I)
-            if title_m:
-                data['name'] = re.sub(r'<[^>]+>', '', title_m.group(1)).strip()
+            title_m = re.search(r'<h[12][^>]*>(.*?)<\/h[12]>', clean, re.I | re.S)
+            title = re.sub(r'\s+', ' ', re.sub(r'<[^>]+>', '', title_m.group(1))).strip() if title_m else ''
+            if not title:
+                # 新版頁面沒有 h1/h2：班名緊接在「班級代碼」欄位之前
+                name_m = re.search(r'(\S+?\s*第\s*\d+\s*期)\s*班級代碼', text)
+                if name_m:
+                    title = name_m.group(1).strip()
+            if title:
+                data['name'] = title
 
             # 2. 人數欄位 (招訓學員 / 目前報名人數)
             m_td = re.search(r'<td[^>]*data-th="[^"]*(?:備註|人數)[^"]*"[^>]*>(.*?)<\/td>', clean, re.S)
@@ -185,11 +202,11 @@ def sync_admission_batches():
         detail = parse_taiwanjobs_detail_page(opener, cid)
         if detail and detail.get('enroll_start_date'):
             try:
-                batch_name = detail.get('name') or f"前端網頁技術與AI應用 (代碼 {cid})"
+                batch_name = build_display_name(detail.get('name'), detail.get('training_start_date'), cid)
 
                 # 官方資料欄位（每次同步都以台灣就業通為準）
+                # 期別名稱只在新建時產生，之後不覆蓋，保留管理員在後台的改名
                 synced_fields = {
-                    "batch_name": batch_name,
                     "total_hours": detail.get('total_hours', 920),
                     "enroll_start_date": detail.get('enroll_start_date'),
                     "enroll_end_date": detail.get('enroll_end_date'),
@@ -215,6 +232,7 @@ def sync_admission_batches():
                     existing_count = AdmissionBatch.objects.count()
                     obj = AdmissionBatch.objects.create(
                         course_code=str(cid),
+                        batch_name=batch_name,
                         sort_order=existing_count + 1,
                         **synced_fields,
                     )
@@ -230,7 +248,7 @@ def sync_admission_batches():
                     logger.info(f"[TaiwanJobs] ✅ 自動建立新期別: {batch_name} (代碼: {cid})")
                 else:
                     results["updated"] += 1
-                    logger.info(f"[TaiwanJobs] 🔄 自動更新期別資訊: {batch_name}")
+                    logger.info(f"[TaiwanJobs] 🔄 自動更新期別資訊: {obj.batch_name}")
 
                 results["synced_batches"].append({
                     "id": obj.id,

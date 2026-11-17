@@ -318,3 +318,58 @@ class StartupSyncTests(TestCase):
     def test_sync_errors_never_raise(self):
         with mock.patch.object(batch_sync, "sync_admission_batches", side_effect=RuntimeError("network down")):
             self.assertIsNone(startup_sync.run_startup_sync())
+
+
+NEW_LAYOUT_DETAIL_HTML = """
+<html><body>
+  <nav>首頁 課程查詢 瀏覽課程明細</nav>
+  <div class="title">前端網頁技術與AI應用(泰山)第 01期</div>
+  <table><tr><th>班級代碼</th><td>167125</td></tr><tr>
+    <td data-th="報名日期">115/11/16 00:00 ~ 116/2/16 23:59</td>
+    <td data-th="訓練期間">116/4/1 ~ 116/9/20</td>
+    <td data-th="人數備註">一般訓練學員數:24 目前一般訓練報名人數:0</td>
+  </tr></table>
+</body></html>
+"""
+
+
+class BatchNamingTests(TestCase):
+    """新版頁面班名解析、統一命名格式，且不覆蓋後台改名"""
+
+    run_sync = SyncAdmissionBatchesTests.run_sync
+    detail = staticmethod(SyncAdmissionBatchesTests.detail)
+
+    def test_parses_title_without_heading_tag(self):
+        data = batch_sync.parse_taiwanjobs_detail_page(FakeOpener(NEW_LAYOUT_DETAIL_HTML), "167125")
+        self.assertEqual(data["name"], "前端網頁技術與AI應用(泰山)第 01期")
+        self.assertEqual(data["training_start_date"], date(2027, 4, 1))
+
+    def test_build_display_name_normalizes_number(self):
+        self.assertEqual(
+            batch_sync.build_display_name("前端網頁技術與AI應用(泰山)第 01期", date(2027, 4, 1), "167125"),
+            "前端網頁技術與AI應用（第 1 期）",
+        )
+
+    def test_build_display_name_fallbacks(self):
+        self.assertEqual(batch_sync.build_display_name("某課程", date(2027, 4, 1), "1"), "某課程")
+        self.assertEqual(
+            batch_sync.build_display_name(None, None, "167125"), "前端網頁技術與AI應用 (代碼 167125)"
+        )
+
+    def test_new_batch_gets_display_name(self):
+        detail = self.detail("167125")
+        detail["name"] = "前端網頁技術與AI應用(泰山)第 01期"
+        self.run_sync(["167125"], {"167125": detail})
+        self.assertEqual(
+            AdmissionBatch.objects.get(course_code="167125").batch_name,
+            "前端網頁技術與AI應用（第 1 期）",
+        )
+
+    def test_update_keeps_admin_batch_name(self):
+        make_batch(course_code="167125", sort_order=3, batch_name="管理員自訂名稱")
+        detail = self.detail("167125", applicants=7)
+        detail["name"] = "前端網頁技術與AI應用(泰山)第 01期"
+        self.run_sync(["167125"], {"167125": detail})
+        batch = AdmissionBatch.objects.get(course_code="167125")
+        self.assertEqual(batch.batch_name, "管理員自訂名稱")
+        self.assertEqual(batch.applicants_count, 7)

@@ -43,6 +43,8 @@ describe('招生期別 SEO 產生器', () => {
     expect(shortBatchName('前端網頁技術與AI應用（第 1 期）')).toBe('第 1 期')
     expect(shortBatchName('前端網頁技術與AI應用班第3期')).toBe('第 3 期')
     expect(shortBatchName('特別班')).toBe('特別班')
+    expect(shortBatchName('前端網頁技術與AI應用(泰山)第 01期')).toBe('第 1 期')
+    expect(shortBatchName('前端網頁技術與AI應用（116 年度第 1 期）')).toBe('116 年度第 1 期')
   })
 
   it('只取最新兩期，並排除前台隱藏的期別', () => {

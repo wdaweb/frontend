@@ -21,8 +21,10 @@ export function pickSeoBatches(batches: AdmissionBatch[] | null | undefined): Ad
 
 /** 「前端網頁技術與AI應用（第 3 期）」→「第 3 期」；無期數時沿用原名 */
 export function shortBatchName(name: string): string {
-  const match = (name || '').match(/第\s*(\d+)\s*期/)
-  return match ? `第 ${match[1]} 期` : name
+  // 官方每年度從「第 01 期」重新編號，有年度時一併保留，避免與往年同期數混淆
+  const match = (name || '').match(/(?:(\d{2,3})\s*年度?\s*)?第\s*0*(\d+)\s*期/)
+  if (!match) return name
+  return match[1] ? `${match[1]} 年度第 ${match[2]} 期` : `第 ${match[2]} 期`
 }
 
 function formatDate(value?: string | null): string {

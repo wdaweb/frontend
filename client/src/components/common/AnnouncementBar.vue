@@ -49,6 +49,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { useCmsStore } from '@/stores/useCmsStore'
+import { shortBatchName } from '@/utils/batchSeo'
 
 const store = useCmsStore()
 
@@ -73,10 +74,7 @@ const dynamicAnnouncementText = computed(() => {
     return customText
   }
   if (activeBatches.value.length > 0) {
-    const batchLabels = activeBatches.value.map(b => {
-      const match = b.batch_name.match(/第\s*\d+\s*期/)
-      return match ? match[0] : b.batch_name
-    })
+    const batchLabels = activeBatches.value.map(b => shortBatchName(b.batch_name))
     const batchSummary = batchLabels.join(' & ')
     return `🔥 ${batchSummary}熱烈招生中！待業民眾享全額免費受訓與生活津貼補助！`
   }
