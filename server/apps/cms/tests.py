@@ -217,6 +217,23 @@ class SyncAdmissionBatchesTests(TestCase):
         self.assertTrue(result["success"])
         self.assertEqual(result["created"] + result["updated"], 0)
 
+    def test_falls_back_to_known_detail_pages_when_session_fails(self):
+        with mock.patch.object(batch_sync, "get_session_and_token", return_value=(None, None)), \
+             mock.patch.object(batch_sync, "parse_taiwanjobs_detail_page",
+                               side_effect=lambda _opener, cid: self.detail(cid, applicants=8) if cid == "167125" else None):
+            result = batch_sync.sync_admission_batches()
+        self.assertTrue(result["success"])
+        self.assertEqual(result["created"], 1)
+        self.assertEqual(AdmissionBatch.objects.get(course_code="167125").applicants_count, 8)
+
+    def test_returns_error_when_both_session_and_fallback_fail(self):
+        with mock.patch.object(batch_sync, "get_session_and_token",
+                               side_effect=lambda error_holder=None: (error_holder.append("HTTP 504") if error_holder is not None else None) or (None, None)), \
+             mock.patch.object(batch_sync, "parse_taiwanjobs_detail_page", return_value=None):
+            result = batch_sync.sync_admission_batches()
+        self.assertFalse(result["success"])
+        self.assertIn("HTTP 504", result["errors"][0])
+
 
 # 真實備份檔（dumpdata 產生）都帶有時間戳欄位
 STAMPS = {"created_at": "2026-09-01T00:00:00Z", "updated_at": "2026-09-01T00:00:00Z"}

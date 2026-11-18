@@ -93,8 +93,16 @@ jobs:
           DEBUG: 'True'
         run: |
           pip install -q -r server/requirements.txt
-          python server/manage.py sync_course_batches --push || {
-            echo "❌ 備援連線亦無法建立至台灣就業通（政府網站可能阻擋海外雲端機房 IP）。"
-            echo "💡 請於台灣本地網路環境設定 CRON_SECRET_TOKEN 後執行：python server/manage.py sync_course_batches --push"
-            exit 1
-          }
+          set +e
+          python server/manage.py sync_course_batches --push
+          RC=$?
+          set -e
+          if [ "$RC" -eq 0 ]; then
+            echo "🎉 GitHub Runner 備援同步並推送 Render 成功！"
+          elif [ "$RC" -eq 2 ]; then
+            echo "::warning::台灣就業通政府閘道目前阻擋海外雲端機房 IP (HTTP 504)，線上既有期別資料 (167125、159269) 已安全保留；如需即時更新報名人數，可於台灣本地執行「同步本地資料到線上.bat」。"
+            echo "⏭️ 本次海外機房遭 504 阻擋已優雅降級，不視為系統異常。"
+          else
+            echo "❌ 備援推送 Render 發生錯誤（exit code: $RC），請檢查 CRON_SECRET_TOKEN 或伺服器狀態。"
+            exit "$RC"
+          fi

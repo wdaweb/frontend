@@ -1,16 +1,13 @@
 import json
 import os
-import urllib.request
+import sys
 from django.core.management.base import BaseCommand
-from apps.cms.services.batch_sync import fetch_live_batches, sync_admission_batches
-
-
-def _serialize_detail(detail):
-    """將日期欄位轉成 YYYY-MM-DD 字串以便 JSON 傳輸"""
-    out = {}
-    for k, v in detail.items():
-        out[k] = v.isoformat() if hasattr(v, "isoformat") else v
-    return out
+from apps.cms.services.batch_sync import (
+    fetch_live_batches,
+    push_batches_to_remote,
+    serialize_batch_detail,
+    sync_admission_batches,
+)
 
 
 class Command(BaseCommand):
@@ -38,27 +35,18 @@ class Command(BaseCommand):
         if options["dump_json"] or options["push"]:
             details, err = fetch_live_batches()
             if err:
-                raise SystemExit(f"[ERROR] 抓取台灣就業通失敗: {err}")
-            payload = {"batches": [_serialize_detail(d) for d in details]}
+                self.stderr.write(f"[NETWORK_BLOCKED] 抓取台灣就業通失敗: {err}")
+                sys.exit(2)
+            payload = {"batches": [serialize_batch_detail(d) for d in details]}
             if options["dump_json"]:
                 self.stdout.write(json.dumps(payload, ensure_ascii=False))
                 return
 
-            token = os.getenv("CRON_SECRET_TOKEN", "").strip()
-            if not token:
-                raise SystemExit("[ERROR] 使用 --push 前必須設定 CRON_SECRET_TOKEN 環境變數")
-            target_url = f"{options['target'].rstrip('/')}/api/v1/cron/batches/sync"
-            req = urllib.request.Request(
-                target_url,
-                data=json.dumps(payload, ensure_ascii=False).encode("utf-8"),
-                headers={
-                    "Content-Type": "application/json",
-                    "X-Cron-Token": token,
-                },
-                method="POST",
-            )
-            with urllib.request.urlopen(req, timeout=180) as res:
-                resp_data = json.loads(res.read().decode("utf-8"))
+            try:
+                resp_data = push_batches_to_remote(details, target_url=options["target"])
+            except Exception as e:
+                raise SystemExit(f"[ERROR] 遠端推送失敗: {e}")
+
             if resp_data.get("success"):
                 self.stdout.write(self.style.SUCCESS(f"[SUCCESS] 遠端推送成功：{resp_data.get('message')}"))
             else:

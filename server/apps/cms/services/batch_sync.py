@@ -60,15 +60,19 @@ def build_display_name(official_name, training_start_date, course_id):
     return f"{TARGET_KEYWORD} (代碼 {course_id})"
 
 def _build_opener(verify_tls=True):
-    """建立帶 Cookie 的 opener；verify_tls=False 時不驗證 TLS 憑證"""
+    """建立帶 Cookie 的 opener；verify_tls=False 時不驗證 TLS 憑證，並支援 TAIWANJOBS_PROXY_URL"""
     ctx = ssl.create_default_context()
     if not verify_tls:
         ctx.check_hostname = False
         ctx.verify_mode = ssl.CERT_NONE
-    return urllib.request.build_opener(
+    handlers = [
         urllib.request.HTTPCookieProcessor(http.cookiejar.CookieJar()),
         urllib.request.HTTPSHandler(context=ctx),
-    )
+    ]
+    proxy_url = os.getenv("TAIWANJOBS_PROXY_URL", "").strip()
+    if proxy_url:
+        handlers.append(urllib.request.ProxyHandler({"http": proxy_url, "https": proxy_url}))
+    return urllib.request.build_opener(*handlers)
 
 def _is_cert_verify_error(exc):
     return isinstance(exc, ssl.SSLCertVerificationError) or isinstance(
@@ -224,11 +228,75 @@ def parse_taiwanjobs_detail_page(opener, course_id):
         return None
 
 
+DEFAULT_KNOWN_COURSE_CODES = ("167125", "159269")
+
+
+def _collect_known_course_codes(default_codes=DEFAULT_KNOWN_COURSE_CODES):
+    """彙整資料庫內現存未隱藏期別代碼與預設追蹤代碼（去重保序）"""
+    codes = []
+    try:
+        db_codes = AdmissionBatch.objects.exclude(status_override='hidden').values_list('course_code', flat=True)
+        for c in db_codes:
+            c_str = str(c or "").strip()
+            if c_str and c_str not in codes:
+                codes.append(c_str)
+    except Exception:
+        pass
+    for c in default_codes:
+        c_str = str(c or "").strip()
+        if c_str and c_str not in codes:
+            codes.append(c_str)
+    return codes
+
+
+def _fetch_known_course_details(default_codes=DEFAULT_KNOWN_COURSE_CODES):
+    """當 /Course 搜尋首頁遭 504 或超時時，改直接 GET 已知課程明細頁（不需 Session Token）"""
+    codes = _collect_known_course_codes(default_codes)
+    if not codes:
+        return []
+    verify_tls = os.getenv("TAIWANJOBS_SKIP_TLS_VERIFY", "False") != "True"
+    opener = _build_opener(verify_tls=verify_tls)
+    details = []
+    for cid in codes:
+        detail = parse_taiwanjobs_detail_page(opener, cid)
+        if detail and detail.get('enroll_start_date'):
+            details.append(detail)
+    return details
+
+
+def serialize_batch_detail(detail):
+    """將日期欄位轉成 YYYY-MM-DD 字串以便 JSON 傳輸"""
+    return {k: (v.isoformat() if hasattr(v, "isoformat") else v) for k, v in detail.items()}
+
+
+def push_batches_to_remote(details, target_url=None, token=None):
+    """將抓取之期別清單 JSON 推送至線上 Render /api/v1/cron/batches/sync"""
+    base_url = (target_url or os.getenv("RENDER_API_BASE_URL") or "https://wdaweb.onrender.com").strip().rstrip("/")
+    cron_token = (token or os.getenv("CRON_SECRET_TOKEN") or "").strip()
+    if not cron_token:
+        raise ValueError("未設定 CRON_SECRET_TOKEN，無法推送至線上伺服器")
+    payload = {"batches": [serialize_batch_detail(d) for d in details]}
+    req = urllib.request.Request(
+        f"{base_url}/api/v1/cron/batches/sync",
+        data=json.dumps(payload, ensure_ascii=False).encode("utf-8"),
+        headers={"Content-Type": "application/json", "X-Cron-Token": cron_token},
+        method="POST",
+    )
+    with urllib.request.urlopen(req, timeout=180) as res:
+        return json.loads(res.read().decode("utf-8"))
+
+
 def fetch_live_batches(keyword=TARGET_KEYWORD):
     """連線台灣就業通抓取所有目前在線課程明細，回傳 (details, error_message)"""
     conn_errors = []
     opener, token = get_session_and_token(error_holder=conn_errors)
     if not opener or not token:
+        # /Course 搜尋首頁若逾時或被阻擋，退回直接讀取已知課程明細頁（不需 Session Token 且延遲較低）
+        logger.warning("[TaiwanJobs] ⚠️ /Course Session 失敗，啟動已知課程明細頁直連備援...")
+        fallback_details = _fetch_known_course_details()
+        if fallback_details:
+            logger.info(f"[TaiwanJobs] ✅ 明細頁直連備援成功，取得 {len(fallback_details)} 筆課程明細")
+            return fallback_details, None
         detail_msg = f"（{conn_errors[-1]}）" if conn_errors else ""
         return None, f"無法連線至台灣就業通官方網站建立 Session{detail_msg}"
 

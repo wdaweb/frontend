@@ -9,15 +9,40 @@ from django.core.management.base import BaseCommand
 from django.core.management import call_command
 from django.conf import settings
 from apps.cms.models import AdmissionBatch, StudentProject
+from apps.cms.services.batch_sync import (
+    fetch_live_batches,
+    push_batches_to_remote,
+    upsert_synced_batches,
+)
 
 class Command(BaseCommand):
-    help = "一鍵同步本地 CMS 資料至線上部署環境（備份資料庫、同步縮圖、更新前端快照、喚醒 Render、打包驗證）"
+    help = "一鍵同步本地 CMS 資料至線上部署環境（同步台灣就業通、備份資料庫、同步縮圖、更新前端快照、喚醒 Render、打包驗證）"
 
     def handle(self, *args, **options):
         self.stdout.write(self.style.NOTICE("🚀 開始執行全自動一鍵同步流程..."))
         base_dir = settings.BASE_DIR  # server/
         repo_root = os.path.dirname(base_dir)  # d:/01.Project/wdaweb
         client_dir = os.path.join(repo_root, "client")
+
+        # 0. 從台灣就業通即時更新本地資料庫期別與人數（台灣本機 IP 僅需 1~2 秒）
+        self.stdout.write("🔄 0/5 正在從台灣就業通同步最新招生期別與報名人數...")
+        try:
+            details, err = fetch_live_batches()
+            if err or details is None:
+                self.stdout.write(self.style.WARNING(f"   ⚠️ 台灣就業通暫時無法連線，保留本地既有期別資料：{err}"))
+            else:
+                sync_res = upsert_synced_batches(details, had_active_courses=len(details) > 0)
+                self.stdout.write(self.style.SUCCESS(
+                    f"   ✓ 台灣就業通期別同步完成（新增 {sync_res['created']} 筆、更新 {sync_res['updated']} 筆）"
+                ))
+                if os.getenv("CRON_SECRET_TOKEN", "").strip() and details:
+                    try:
+                        push_res = push_batches_to_remote(details)
+                        self.stdout.write(self.style.SUCCESS(f"   ✓ 已同步推送至線上 Render：{push_res.get('message')}"))
+                    except Exception as push_err:
+                        self.stdout.write(self.style.WARNING(f"   ⚠️ 線上 Render 推送略過（可稍後透過 git push 自動匯入）：{push_err}"))
+        except Exception as sync_err:
+            self.stdout.write(self.style.WARNING(f"   ⚠️ 期別同步過程發生異常，保留既有資料：{sync_err}"))
 
         # 1. 匯出 cms_data_backup.json
         self.stdout.write("📦 1/5 正在打包本地資料庫至 cms_data_backup.json...")
