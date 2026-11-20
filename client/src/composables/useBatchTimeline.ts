@@ -251,6 +251,15 @@ export function useBatchTimeline(batchesInput: MaybeRefOrGetter<AdmissionBatch[]
     return Date.now() - syncedTime <= SYNC_FRESH_WINDOW_MS
   }
 
+  /** 將同步時間轉成台灣時間的「M/D」；無效或缺少時回傳空字串 */
+  function formatSyncedDate(value?: string | null): string {
+    if (!value) return ''
+    const time = new Date(value).getTime()
+    if (Number.isNaN(time)) return ''
+    const taipei = new Date(time + 8 * 60 * 60 * 1000)
+    return `${taipei.getUTCMonth() + 1}/${taipei.getUTCDate()}`
+  }
+
   function getApplicantsSummary(batch: AdmissionBatch): ApplicantsSummary {
     const planned = batch.planned_trainees || 24
     const count = batch.applicants_count || 0
@@ -277,6 +286,17 @@ export function useBatchTimeline(batchesInput: MaybeRefOrGetter<AdmissionBatch[]
 
     if (isBatchEnrolling(batch)) {
       if (!isApplicantsSyncFresh(batch)) {
+        // 超過 24 小時未同步：仍顯示最後一次同步的人數，但標明日期，避免被誤認為即時數字
+        const syncedLabel = formatSyncedDate(batch.last_synced_at)
+        if (syncedLabel) {
+          return {
+            label: '📋 報名人數',
+            countText: `截至 ${syncedLabel} 已報名 ${count} 人`,
+            detailText: `招訓 ${planned} 名 · 最新人數以台灣就業通為準`,
+            barClass: 'bg-gradient-to-r from-cyan-500 to-blue-500 shadow-[0_0_8px_rgba(6,182,212,0.35)]',
+            percent: Math.min(100, Math.round((count / planned) * 100))
+          }
+        }
         return {
           label: '📋 預定招訓規模',
           countText: `招訓 ${planned} 名`,

@@ -61,13 +61,16 @@ describe('🚀 系統生命徵象冒煙測試 (Smoke & Sanity)', () => {
       expect(getStepStatus({ ...baseBatch, status_override: 'training' }, 4)).toBe('active')
       expect(getStepStatus({ ...baseBatch, status_override: 'ended' }, 5)).toBe('completed')
 
-      // 報名人數即時性保護：24h 內顯示實際報名數，過期或未同步則切回招訓規模說明
+      // 報名人數即時性保護：24h 內顯示實際報名數；過期則顯示「截至某日」人數；從未同步才切回招訓規模說明
       const freshBatch = { ...baseBatch, status_override: 'open', last_synced_at: new Date().toISOString(), applicants_count: 3 }
       expect(getApplicantsSummary(freshBatch).countText).toBe('已報名 3 人')
-      const staleBatch = { ...baseBatch, status_override: 'open', last_synced_at: '2020-01-01T00:00:00Z', applicants_count: 0 }
-      expect(getApplicantsSummary(staleBatch).label).toBe('📋 預定招訓規模')
-      expect(getApplicantsSummary(staleBatch).countText).toBe('招訓 24 名')
-      expect(getApplicantsSummary(staleBatch).detailText).toBe('即時報名人數以台灣就業通為準')
+      // 2020-01-01T16:40:00Z 為台灣時間 1/2 00:40，日期需以台灣時間計算
+      const staleBatch = { ...baseBatch, status_override: 'open', last_synced_at: '2020-01-01T16:40:00Z', applicants_count: 1 }
+      expect(getApplicantsSummary(staleBatch).countText).toBe('截至 1/2 已報名 1 人')
+      expect(getApplicantsSummary(staleBatch).detailText).toBe('招訓 24 名 · 最新人數以台灣就業通為準')
+      const neverSynced = { ...baseBatch, status_override: 'open', last_synced_at: null, applicants_count: 0 }
+      expect(getApplicantsSummary(neverSynced).countText).toBe('招訓 24 名')
+      expect(getApplicantsSummary(neverSynced).detailText).toBe('即時報名人數以台灣就業通為準')
     })
   })
 
