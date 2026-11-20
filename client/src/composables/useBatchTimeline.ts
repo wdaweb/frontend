@@ -241,25 +241,6 @@ export function useBatchTimeline(batchesInput: MaybeRefOrGetter<AdmissionBatch[]
 
 
 
-  /** 報名人數即時性保護視窗：24 小時內有成功與台灣就業通同步才顯示實際人數 */
-  const SYNC_FRESH_WINDOW_MS = 24 * 60 * 60 * 1000
-
-  function isApplicantsSyncFresh(batch: AdmissionBatch): boolean {
-    if (!batch.last_synced_at) return false
-    const syncedTime = new Date(batch.last_synced_at).getTime()
-    if (Number.isNaN(syncedTime)) return false
-    return Date.now() - syncedTime <= SYNC_FRESH_WINDOW_MS
-  }
-
-  /** 將同步時間轉成台灣時間的「M/D」；無效或缺少時回傳空字串 */
-  function formatSyncedDate(value?: string | null): string {
-    if (!value) return ''
-    const time = new Date(value).getTime()
-    if (Number.isNaN(time)) return ''
-    const taipei = new Date(time + 8 * 60 * 60 * 1000)
-    return `${taipei.getUTCMonth() + 1}/${taipei.getUTCDate()}`
-  }
-
   function getApplicantsSummary(batch: AdmissionBatch): ApplicantsSummary {
     const planned = batch.planned_trainees || 24
     const count = batch.applicants_count || 0
@@ -285,33 +266,13 @@ export function useBatchTimeline(batchesInput: MaybeRefOrGetter<AdmissionBatch[]
     }
 
     if (isBatchEnrolling(batch)) {
-      if (!isApplicantsSyncFresh(batch)) {
-        // 超過 24 小時未同步：仍顯示最後一次同步的人數，但標明日期，避免被誤認為即時數字
-        const syncedLabel = formatSyncedDate(batch.last_synced_at)
-        if (syncedLabel) {
-          return {
-            label: '📋 報名人數',
-            countText: `截至 ${syncedLabel} 已報名 ${count} 人`,
-            detailText: `招訓 ${planned} 名 · 最新人數以台灣就業通為準`,
-            barClass: 'bg-gradient-to-r from-cyan-500 to-blue-500 shadow-[0_0_8px_rgba(6,182,212,0.35)]',
-            percent: Math.min(100, Math.round((count / planned) * 100))
-          }
-        }
-        return {
-          label: '📋 預定招訓規模',
-          countText: `招訓 ${planned} 名`,
-          detailText: '即時報名人數以台灣就業通為準',
-          barClass: 'bg-gradient-to-r from-cyan-500 to-blue-500 shadow-[0_0_8px_rgba(6,182,212,0.35)]',
-          percent: 100
-        }
-      }
-      const pct = Math.min(100, Math.round((count / planned) * 100))
+      // 報名期間不顯示報名人數：線上伺服器無法即時取得台灣就業通數字，報名截止後才顯示累計報名結果
       return {
-        label: '🔥 即時報名熱度',
-        countText: `已報名 ${count} 人`,
-        detailText: `招訓 ${planned} 名 · ${count >= planned ? '報名踴躍，截止前皆可報名' : '把握機會線上報名'}`,
-        barClass: 'bg-gradient-to-r from-cyan-500 to-emerald-400 shadow-[0_0_8px_rgba(6,182,212,0.5)]',
-        percent: pct
+        label: '📋 預定招訓規模',
+        countText: `招訓 ${planned} 名`,
+        detailText: '即時報名人數以台灣就業通為準',
+        barClass: 'bg-gradient-to-r from-cyan-500 to-blue-500 shadow-[0_0_8px_rgba(6,182,212,0.35)]',
+        percent: 100
       }
     }
 
