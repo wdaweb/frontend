@@ -13,6 +13,7 @@ permissions:
   contents: read
   pages: write
   id-token: write
+  deployments: read
 
 concurrency:
   group: 'pages'
@@ -64,6 +65,19 @@ jobs:
         uses: actions/upload-pages-artifact@v3
         with:
           path: './client/dist'
+
+      # 先前的 Pages 部署若卡在「進行中」，新部署會被拒絕（due to in progress deployment）。
+      # 部署前取消其他 commit 殘留的 github-pages 部署；已完成的部署取消會失敗，直接忽略。
+      - name: Cancel Stuck Pages Deployments
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          for sha in $(gh api "repos/${{ github.repository }}/deployments?environment=github-pages&per_page=10" --jq '.[].sha' | sort -u); do
+            [ "$sha" = "${{ github.sha }}" ] && continue
+            if gh api -X POST "repos/${{ github.repository }}/pages/deployments/$sha/cancel" >/dev/null 2>&1; then
+              echo "已取消卡住的 Pages 部署：$sha"
+            fi
+          done
 
       - name: Deploy to GitHub Pages
         id: deployment
