@@ -241,15 +241,30 @@ export function useBatchTimeline(batchesInput: MaybeRefOrGetter<AdmissionBatch[]
 
 
 
+  /**
+   * 報名人數是否為最終結果：最後一次同步時間晚於報名截止日（台灣時間當天 23:59:59）。
+   * 線上伺服器無法即時取得台灣就業通人數，未在截止後同步過的人數可能是報名初期的舊數字，不應顯示。
+   */
+  function hasFinalApplicantsCount(batch: AdmissionBatch): boolean {
+    if (!batch.last_synced_at || !batch.enroll_end_date) return false
+    const syncedTime = new Date(batch.last_synced_at).getTime()
+    const enrollEndTime = new Date(`${batch.enroll_end_date}T23:59:59+08:00`).getTime()
+    if (Number.isNaN(syncedTime) || Number.isNaN(enrollEndTime)) return false
+    return syncedTime > enrollEndTime
+  }
+
   function getApplicantsSummary(batch: AdmissionBatch): ApplicantsSummary {
     const planned = batch.planned_trainees || 24
     const count = batch.applicants_count || 0
+    const showCount = hasFinalApplicantsCount(batch)
 
     if (isBatchEnded(batch)) {
       return {
         label: '🏆 招訓與參訓成果',
         countText: `圓滿結訓 ${planned} 名`,
-        detailText: `累計報名 ${count} 人甄試 · 超額 ${Math.round((count / planned) * 100)}%`,
+        detailText: showCount
+          ? `累計報名 ${count} 人甄試 · 超額 ${Math.round((count / planned) * 100)}%`
+          : '報名人數以台灣就業通為準',
         barClass: 'bg-slate-700',
         percent: 100
       }
@@ -259,7 +274,7 @@ export function useBatchTimeline(batchesInput: MaybeRefOrGetter<AdmissionBatch[]
       return {
         label: '👥 正式參訓學員陣容',
         countText: `正取參訓 ${planned} 名`,
-        detailText: `累計報名 ${count} 人甄試 · 超額選拔`,
+        detailText: showCount ? `累計報名 ${count} 人甄試 · 超額選拔` : '報名人數以台灣就業通為準',
         barClass: 'bg-gradient-to-r from-cyan-500 to-emerald-400 shadow-[0_0_8px_rgba(6,182,212,0.5)]',
         percent: 100
       }

@@ -105,6 +105,7 @@ export const defaultBatches: AdmissionBatch[] = [
 		status_override: 'auto',
 		click_count: 0,
 		sort_order: 2,
+		last_synced_at: '2026-11-17T15:30:00Z',
 	},
 ]
 

@@ -4,7 +4,7 @@ import json
 import re
 import shutil
 import time
-from datetime import datetime
+from datetime import datetime, timezone as dt_timezone
 from django.core.management.base import BaseCommand
 from django.core.management import call_command
 from django.conf import settings
@@ -132,6 +132,11 @@ class Command(BaseCommand):
             batch_lines = ['export const defaultBatches: AdmissionBatch[] = [']
             for b in batches:
                 screening_str = json.dumps(str(b.screening_date)) if b.screening_date else 'null'
+                # 前台以同步時間判斷報名人數是否為截止後的最終結果，快照需一併保留
+                synced_str = (
+                    json.dumps(b.last_synced_at.astimezone(dt_timezone.utc).strftime('%Y-%m-%dT%H:%M:%SZ'))
+                    if b.last_synced_at else 'null'
+                )
                 batch_lines.extend([
                     '\t{',
                     f'\t\tid: {b.id},',
@@ -150,6 +155,7 @@ class Command(BaseCommand):
                     f'\t\tstatus_override: {json.dumps(b.status_override)},',
                     f'\t\tclick_count: {b.click_count},',
                     f'\t\tsort_order: {b.sort_order},',
+                    f'\t\tlast_synced_at: {synced_str},',
                     '\t},',
                 ])
             batch_lines.append(']')

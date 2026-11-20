@@ -65,9 +65,16 @@ describe('🚀 系統生命徵象冒煙測試 (Smoke & Sanity)', () => {
       const enrolling = { ...baseBatch, status_override: 'open', last_synced_at: new Date().toISOString(), applicants_count: 3 }
       expect(getApplicantsSummary(enrolling).countText).toBe('招訓 24 名')
       expect(getApplicantsSummary(enrolling).detailText).toBe('即時報名人數以台灣就業通為準')
-      // 報名截止後（甄試／訓練）才顯示累計報名人數
-      const training = { ...baseBatch, status_override: 'training', applicants_count: 30 }
-      expect(getApplicantsSummary(training).detailText).toBe('累計報名 30 人甄試 · 超額選拔')
+      // 報名截止後（甄試／訓練／結訓）：同步時間晚於截止日才顯示累計報名人數
+      // enroll_end_date 2027-02-16 → 台灣時間 2/16 23:59:59 = 2027-02-16T15:59:59Z
+      const finalSynced = { ...baseBatch, status_override: 'training', applicants_count: 30, last_synced_at: '2027-02-16T16:00:00Z' }
+      expect(getApplicantsSummary(finalSynced).detailText).toBe('累計報名 30 人甄試 · 超額選拔')
+      const staleSynced = { ...baseBatch, status_override: 'training', applicants_count: 1, last_synced_at: '2027-02-16T15:00:00Z' }
+      expect(getApplicantsSummary(staleSynced).detailText).toBe('報名人數以台灣就業通為準')
+      const endedStale = { ...baseBatch, status_override: 'ended', applicants_count: 1, last_synced_at: '2026-11-20T16:40:00Z' }
+      expect(getApplicantsSummary(endedStale).detailText).toBe('報名人數以台灣就業通為準')
+      const neverSynced = { ...baseBatch, status_override: 'ended', applicants_count: 30, last_synced_at: null }
+      expect(getApplicantsSummary(neverSynced).detailText).toBe('報名人數以台灣就業通為準')
     })
   })
 
