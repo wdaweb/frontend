@@ -49,7 +49,7 @@ describe('🚀 系統生命徵象冒煙測試 (Smoke & Sanity)', () => {
 
     it('固定欄序不變量：第 1 期永遠排在左邊，第 2 期永遠排在右邊', () => {
       const reversed = [...defaultBatches].reverse()
-      const { sortedBatches, getStepStatus } = useBatchTimeline(() => reversed)
+      const { sortedBatches, getStepStatus, getApplicantsSummary } = useBatchTimeline(() => reversed)
       expect(sortedBatches.value.length).toBe(2)
       expect(sortedBatches.value[0]?.course_code).toBe('167125')
       expect(sortedBatches.value[0]?.batch_name).toBe('前端網頁技術與AI應用（第 1 期）')
@@ -60,6 +60,14 @@ describe('🚀 系統生命徵象冒煙測試 (Smoke & Sanity)', () => {
       expect(getStepStatus({ ...baseBatch, status_override: 'training' }, 3)).toBe('completed')
       expect(getStepStatus({ ...baseBatch, status_override: 'training' }, 4)).toBe('active')
       expect(getStepStatus({ ...baseBatch, status_override: 'ended' }, 5)).toBe('completed')
+
+      // 報名人數即時性保護：24h 內顯示實際報名數，過期或未同步則切回招訓規模說明
+      const freshBatch = { ...baseBatch, status_override: 'open', last_synced_at: new Date().toISOString(), applicants_count: 3 }
+      expect(getApplicantsSummary(freshBatch).countText).toBe('已報名 3 人')
+      const staleBatch = { ...baseBatch, status_override: 'open', last_synced_at: '2020-01-01T00:00:00Z', applicants_count: 0 }
+      expect(getApplicantsSummary(staleBatch).label).toBe('📋 預定招訓規模')
+      expect(getApplicantsSummary(staleBatch).countText).toBe('招訓 24 名')
+      expect(getApplicantsSummary(staleBatch).detailText).toBe('即時報名人數以台灣就業通為準')
     })
   })
 

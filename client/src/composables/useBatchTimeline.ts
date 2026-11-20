@@ -241,6 +241,16 @@ export function useBatchTimeline(batchesInput: MaybeRefOrGetter<AdmissionBatch[]
 
 
 
+  /** 報名人數即時性保護視窗：24 小時內有成功與台灣就業通同步才顯示實際人數 */
+  const SYNC_FRESH_WINDOW_MS = 24 * 60 * 60 * 1000
+
+  function isApplicantsSyncFresh(batch: AdmissionBatch): boolean {
+    if (!batch.last_synced_at) return false
+    const syncedTime = new Date(batch.last_synced_at).getTime()
+    if (Number.isNaN(syncedTime)) return false
+    return Date.now() - syncedTime <= SYNC_FRESH_WINDOW_MS
+  }
+
   function getApplicantsSummary(batch: AdmissionBatch): ApplicantsSummary {
     const planned = batch.planned_trainees || 24
     const count = batch.applicants_count || 0
@@ -266,6 +276,15 @@ export function useBatchTimeline(batchesInput: MaybeRefOrGetter<AdmissionBatch[]
     }
 
     if (isBatchEnrolling(batch)) {
+      if (!isApplicantsSyncFresh(batch)) {
+        return {
+          label: '📋 預定招訓規模',
+          countText: `招訓 ${planned} 名`,
+          detailText: '即時報名人數以台灣就業通為準',
+          barClass: 'bg-gradient-to-r from-cyan-500 to-blue-500 shadow-[0_0_8px_rgba(6,182,212,0.35)]',
+          percent: 100
+        }
+      }
       const pct = Math.min(100, Math.round((count / planned) * 100))
       return {
         label: '🔥 即時報名熱度',
